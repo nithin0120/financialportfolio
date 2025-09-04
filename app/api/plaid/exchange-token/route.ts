@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error exchanging token:', error)
     return NextResponse.json(
-      { error: 'Failed to connect bank account' },
+      { error: 'An error occurred. Please try again.' },
       { status: 500 }
     )
   }

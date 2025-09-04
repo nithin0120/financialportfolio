@@ -312,7 +312,7 @@ export default function ReportsPage() {
         </div>
 
         {/* Filters */}
-        <div className="bg-white/20 backdrop-blur-xl border border-white/30 rounded-2xl p-6 shadow-2xl mb-8">
+        <div className="chart-container mb-8">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <label className="block text-sm font-medium text-white/90 mb-2">
@@ -352,28 +352,28 @@ export default function ReportsPage() {
 
         {/* Data Summary */}
         <div className="mb-8">
-          <div className="bg-white/20 backdrop-blur-xl border border-white/30 rounded-2xl p-6 shadow-2xl">
+          <div className="chart-container">
             <h2 className="text-xl font-semibold text-white drop-shadow-lg mb-4">Financial Data Summary</h2>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="text-center p-4 bg-white/10 rounded-lg border border-white/20">
+              <div className="text-center p-4 bg-slate-700/50 rounded-lg border border-slate-600/30">
                 <div className="text-2xl font-bold text-blue-400">
                   {accountsLoading ? '...' : accounts.length}
                 </div>
                 <div className="text-sm text-white/80">Connected Accounts</div>
               </div>
-              <div className="text-center p-4 bg-white/10 rounded-lg border border-white/20">
+              <div className="text-center p-4 bg-slate-700/50 rounded-lg border border-slate-600/30">
                 <div className="text-2xl font-bold text-green-400">
                   {portfolioLoading ? '...' : `$${portfolioMetrics?.totalPortfolioValue?.toLocaleString() || '0'}`}
                 </div>
                 <div className="text-sm text-white/80">Total Portfolio Value</div>
               </div>
-              <div className="text-center p-4 bg-white/10 rounded-lg border border-white/20">
+              <div className="text-center p-4 bg-slate-700/50 rounded-lg border border-slate-600/30">
                 <div className="text-2xl font-bold text-yellow-400">
                   {transactionsLoading ? '...' : transactions.length}
                 </div>
                 <div className="text-sm text-white/80">Total Transactions</div>
               </div>
-              <div className="text-center p-4 bg-white/10 rounded-lg border border-white/20">
+              <div className="text-center p-4 bg-slate-700/50 rounded-lg border border-slate-600/30">
                 <div className="text-2xl font-bold text-purple-400">
                   {accountsLoading || transactionsLoading ? '...' : 
                    accounts.length > 0 && transactions.length > 0 ? 'Ready' : 'Pending'}
@@ -389,12 +389,12 @@ export default function ReportsPage() {
           <h2 className="text-xl font-semibold text-white drop-shadow-lg mb-4">Available Reports</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredReports.map((report) => (
-              <div key={report.id} className="bg-white/20 backdrop-blur-xl border border-white/30 rounded-2xl p-6 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:transform hover:-translate-y-1">
+              <div key={report.id} className="chart-container hover:shadow-3xl transition-all duration-300 hover:transform hover:-translate-y-1">
                 <div className="flex items-start justify-between mb-4">
-                  <div className="p-3 rounded-lg bg-white/20 text-white">
+                  <div className="p-3 rounded-lg bg-slate-700/50 text-white">
                     <report.icon className="h-6 w-6" />
                   </div>
-                  <span className="text-xs font-medium px-2 py-1 bg-white/20 text-white rounded-full">
+                  <span className="text-xs font-medium px-2 py-1 bg-slate-700/50 text-white rounded-full">
                     {report.format}
                   </span>
                 </div>

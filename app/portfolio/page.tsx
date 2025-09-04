@@ -135,10 +135,10 @@ export default function PortfolioPage() {
 
   const handleSyncTransactions = async () => {
     const result = await syncTransactions()
-    if (result.success) {
+    if (result?.success) {
       alert('Transactions synced successfully!')
     } else {
-      alert(`Failed to sync transactions: ${result.error}`)
+      alert(`Failed to sync transactions: ${result?.error || 'Unknown error'}`)
     }
   }
 
@@ -149,7 +149,7 @@ export default function PortfolioPage() {
         <div className="max-w-7xl mx-auto px-6 py-8">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-white drop-shadow-lg">Portfolio Overview</h1>
-            <p className="mt-2 text-white opacity-90 drop-shadow-md">Loading portfolio data...</p>
+            <p className="mt-2 text-white/90 drop-shadow-md">Loading portfolio data...</p>
           </div>
         </div>
       </div>
@@ -162,7 +162,7 @@ export default function PortfolioPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white drop-shadow-lg">Portfolio Overview</h1>
-          <p className="mt-2 text-white opacity-90 drop-shadow-md">
+          <p className="mt-2 text-white/90 drop-shadow-md">
             Track your investments and performance
           </p>
         </div>
@@ -175,14 +175,14 @@ export default function PortfolioPage() {
               <button
                 onClick={handleSyncTransactions}
                 disabled={accountsLoading}
-                className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 rounded-lg px-4 py-2 text-white hover:bg-opacity-30 transition-all duration-200 flex items-center space-x-2"
+                className="bg-slate-700/50 backdrop-blur-md border border-slate-600/30 rounded-lg px-4 py-2 text-white hover:bg-slate-600/50 transition-all duration-200 flex items-center space-x-2"
               >
                 <RefreshCw className={`h-4 w-4 ${accountsLoading ? 'animate-spin' : ''}`} />
                 <span>Sync Transactions</span>
               </button>
               <button
                 onClick={() => setShowBankConnection(!showBankConnection)}
-                className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 rounded-lg px-4 py-2 text-white hover:bg-opacity-30 transition-all duration-200 flex items-center space-x-2"
+                className="bg-slate-700/50 backdrop-blur-md border border-slate-600/30 rounded-lg px-4 py-2 text-white hover:bg-slate-600/50 transition-all duration-200 flex items-center space-x-2"
               >
                 <CreditCard className="h-4 w-4" />
                 <span>{showBankConnection ? 'Hide' : 'Connect Bank'}</span>
@@ -200,19 +200,19 @@ export default function PortfolioPage() {
           )}
 
           {accountsLoading ? (
-            <div className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 rounded-lg p-8 text-center">
+            <div className="metric-card text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto"></div>
-              <p className="mt-2 text-white opacity-90">Loading accounts...</p>
+              <p className="mt-2 text-white/90">Loading accounts...</p>
             </div>
           ) : accountsError ? (
-            <div className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 rounded-lg p-8 text-center">
+            <div className="metric-card text-center">
               <p className="text-red-400">Error loading accounts: {accountsError}</p>
             </div>
           ) : accounts.length === 0 ? (
-            <div className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 rounded-lg p-8 text-center">
-              <CreditCard className="h-12 w-12 text-white opacity-60 mx-auto mb-4" />
+            <div className="metric-card text-center">
+              <CreditCard className="h-12 w-12 text-white/60 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-white mb-2">No Bank Accounts Connected</h3>
-              <p className="text-white opacity-90 mb-4">Connect your bank accounts to view transactions and balances</p>
+              <p className="text-white/90 mb-4">Connect your bank accounts to view transactions and balances</p>
               <button
                 onClick={() => setShowBankConnection(true)}
                 className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 rounded-lg px-4 py-2 text-white hover:bg-opacity-30 transition-all duration-200"
@@ -223,20 +223,20 @@ export default function PortfolioPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {accounts.map((account) => (
-                <div key={account.id} className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 rounded-lg p-6">
+                <div key={account.id} className="metric-card">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-white bg-opacity-30 rounded-lg">
+                      <div className="p-2 bg-slate-700/50 rounded-lg">
                         <CreditCard className="h-5 w-5 text-white" />
                       </div>
                       <div>
                         <h3 className="font-medium text-white">{account.name}</h3>
-                        <p className="text-sm text-white opacity-70">{account.type}</p>
+                        <p className="text-sm text-white/70">{account.type}</p>
                       </div>
                     </div>
                     <div className="text-right">
                       <p className="text-lg font-semibold text-white">${account.balance.toLocaleString()}</p>
-                      <p className="text-sm text-white opacity-70">Available</p>
+                      <p className="text-sm text-white/70">Available</p>
                     </div>
                   </div>
                 </div>
@@ -247,27 +247,27 @@ export default function PortfolioPage() {
 
         {/* Portfolio Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 rounded-lg p-6">
+          <div className="metric-card">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-white opacity-90 mb-1">Total Value</p>
+                <p className="text-sm font-medium text-white/90 mb-1">Total Value</p>
                 <p className="text-2xl font-bold text-white">${totalValue.toLocaleString()}</p>
               </div>
-              <div className="p-3 bg-white bg-opacity-30 rounded-lg">
+              <div className="p-3 bg-slate-700/50 rounded-lg">
                 <DollarSign className="h-6 w-6 text-white" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 rounded-lg p-6">
+          <div className="metric-card">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-white opacity-90 mb-1">Total P&L</p>
+                <p className="text-sm font-medium text-white/90 mb-1">Total P&L</p>
                 <p className={`text-2xl font-bold ${totalPnL >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                   ${totalPnL.toLocaleString()}
                 </p>
               </div>
-              <div className="p-3 bg-white bg-opacity-30 rounded-lg">
+              <div className="p-3 bg-slate-700/50 rounded-lg">
                 {totalPnL >= 0 ? (
                   <TrendingUp className="h-6 w-6 text-emerald-400" />
                 ) : (
@@ -277,27 +277,27 @@ export default function PortfolioPage() {
             </div>
           </div>
 
-          <div className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 rounded-lg p-6">
+          <div className="metric-card">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-white opacity-90 mb-1">P&L %</p>
+                <p className="text-sm font-medium text-white/90 mb-1">P&L %</p>
                 <p className={`text-2xl font-bold ${totalPnLPercent >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                   {totalPnLPercent >= 0 ? '+' : ''}{totalPnLPercent.toFixed(2)}%
                 </p>
               </div>
-              <div className="p-3 bg-white bg-opacity-30 rounded-lg">
+              <div className="p-3 bg-slate-700/50 rounded-lg">
                 <Percent className="h-6 w-6 text-white" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 rounded-lg p-6">
+          <div className="metric-card">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-white opacity-90 mb-1">Bank Balance</p>
+                <p className="text-sm font-medium text-white/90 mb-1">Bank Balance</p>
                 <p className="text-2xl font-bold text-white">${totalBankBalance.toLocaleString()}</p>
               </div>
-              <div className="p-3 bg-white bg-opacity-30 rounded-lg">
+              <div className="p-3 bg-slate-700/50 rounded-lg">
                 <CreditCard className="h-6 w-6 text-white" />
               </div>
             </div>
@@ -307,7 +307,7 @@ export default function PortfolioPage() {
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {/* Asset Allocation */}
-          <div className="bg-white bg-opacity-30 backdrop-blur-md border border-white border-opacity-40 rounded-lg p-6">
+          <div className="chart-container">
             <h3 className="text-lg font-semibold text-white mb-4 drop-shadow-md">Asset Allocation</h3>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
@@ -339,7 +339,7 @@ export default function PortfolioPage() {
           </div>
 
           {/* Performance vs Benchmark */}
-          <div className="bg-white bg-opacity-30 backdrop-blur-md border border-white border-opacity-40 rounded-lg p-6">
+          <div className="chart-container">
             <h3 className="text-lg font-semibold text-white mb-4 drop-shadow-md">Performance vs Benchmark</h3>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={performanceData}>
@@ -371,7 +371,7 @@ export default function PortfolioPage() {
         </div>
 
         {/* Portfolio Holdings */}
-        <div className="bg-white bg-opacity-30 backdrop-blur-md border border-white border-opacity-40 rounded-lg p-6">
+        <div className="chart-container">
           <h3 className="text-lg font-semibold text-white mb-4 drop-shadow-md">Portfolio Holdings</h3>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-white divide-opacity-20">
@@ -409,16 +409,16 @@ export default function PortfolioPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
                       {holding.symbol}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white opacity-90">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white/90">
                       {holding.name}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white opacity-90">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white/90">
                       {holding.shares.toLocaleString()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white opacity-90">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white/90">
                       ${holding.avgPrice.toFixed(2)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white opacity-90">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white/90">
                       ${holding.currentPrice.toFixed(2)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">

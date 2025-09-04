@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Area, AreaChart } from 'recharts'
-import { TrendingUp, TrendingDown, DollarSign, Calendar, Filter, Download, Eye } from 'lucide-react'
+import { TrendingUp, TrendingDown, DollarSign } from 'lucide-react'
 import { useAccounts } from '@/hooks/useAccounts'
 import { useTransactions } from '@/hooks/useTransactions'
 import { usePortfolioMetrics } from '@/hooks/usePortfolioMetrics'
@@ -71,7 +71,9 @@ export default function AnalyticsPage() {
       const categoryGroups = transactions
         .filter(t => t.amount < 0) // Only spending transactions
         .reduce((groups, transaction) => {
-          const category = transaction.category || 'Other'
+          const category = Array.isArray(transaction.category) 
+            ? transaction.category[0] || 'Other'
+            : transaction.category || 'Other'
           if (!groups[category]) {
             groups[category] = 0
           }
@@ -238,53 +240,53 @@ export default function AnalyticsPage() {
 
         {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 rounded-lg p-6">
+          <div className="metric-card">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-white opacity-90 mb-1">Total Spending</p>
+                <p className="text-sm font-medium text-white/80 mb-1">Total Spending</p>
                 <p className="text-2xl font-bold text-white">${totalSpending.toLocaleString()}</p>
               </div>
-              <div className="p-3 bg-white bg-opacity-30 rounded-lg">
+              <div className="p-3 bg-slate-700/50 rounded-lg">
                 <DollarSign className="h-6 w-6 text-white" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 rounded-lg p-6">
+          <div className="metric-card">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-white opacity-90 mb-1">Total Income</p>
+                <p className="text-sm font-medium text-white/80 mb-1">Total Income</p>
                 <p className="text-2xl font-bold text-white">${totalIncome.toLocaleString()}</p>
               </div>
-              <div className="p-3 bg-white bg-opacity-30 rounded-lg">
+              <div className="p-3 bg-slate-700/50 rounded-lg">
                 <TrendingUp className="h-6 w-6 text-emerald-400" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 rounded-lg p-6">
+          <div className="metric-card">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-white opacity-90 mb-1">Savings Rate</p>
+                <p className="text-sm font-medium text-white/80 mb-1">Savings Rate</p>
                 <p className={`text-2xl font-bold ${savingsRate >= 20 ? 'text-emerald-400' : savingsRate >= 10 ? 'text-yellow-400' : 'text-red-400'}`}>
                   {savingsRate.toFixed(1)}%
                 </p>
               </div>
-              <div className="p-3 bg-white bg-opacity-30 rounded-lg">
+              <div className="p-3 bg-slate-700/50 rounded-lg">
                 <TrendingUp className="h-6 w-6 text-white" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 rounded-lg p-6">
+          <div className="metric-card">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-white opacity-90 mb-1">Investment Return</p>
+                <p className="text-sm font-medium text-white/80 mb-1">Investment Return</p>
                 <p className={`text-2xl font-bold ${investmentReturn >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                   {investmentReturn >= 0 ? '+' : ''}{investmentReturn.toFixed(1)}%
                 </p>
               </div>
-              <div className="p-3 bg-white bg-opacity-30 rounded-lg">
+              <div className="p-3 bg-slate-700/50 rounded-lg">
                 {investmentReturn >= 0 ? (
                   <TrendingUp className="h-6 w-6 text-emerald-400" />
                 ) : (
@@ -298,7 +300,7 @@ export default function AnalyticsPage() {
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {/* Spending by Category */}
-          <div className="bg-white bg-opacity-30 backdrop-blur-md border border-white border-opacity-40 rounded-lg p-6">
+          <div className="chart-container">
             <h3 className="text-lg font-semibold text-white mb-4 drop-shadow-md">Spending by Category</h3>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
@@ -330,7 +332,7 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Monthly Spending */}
-          <div className="bg-white bg-opacity-30 backdrop-blur-md border border-white border-opacity-40 rounded-lg p-6">
+          <div className="chart-container">
             <h3 className="text-lg font-semibold text-white mb-4 drop-shadow-md">Monthly Spending vs Income</h3>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={monthlySpending}>
@@ -363,7 +365,7 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Investment Performance */}
-        <div className="bg-white bg-opacity-30 backdrop-blur-md border border-white border-opacity-40 rounded-lg p-6 mb-8">
+        <div className="chart-container mb-8">
           <h3 className="text-lg font-semibold text-white mb-4 drop-shadow-md">Investment Performance</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={investmentPerformance}>
@@ -394,7 +396,7 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Financial Insights */}
-        <div className="bg-white bg-opacity-30 backdrop-blur-md border border-white border-opacity-40 rounded-lg p-6">
+        <div className="chart-container">
           <h3 className="text-lg font-semibold text-white mb-4 drop-shadow-md">Financial Insights</h3>
           {insights.length > 0 ? (
             <div className="space-y-4">

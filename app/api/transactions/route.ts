@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
     if (error) {
       console.error('Error fetching transactions:', error)
       return NextResponse.json(
-        { error: 'Failed to fetch transactions' },
+        { error: 'An error occurred. Please try again.' },
         { status: 500 }
       )
     }
@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error in transactions API:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'An error occurred. Please try again.' },
       { status: 500 }
     )
   }

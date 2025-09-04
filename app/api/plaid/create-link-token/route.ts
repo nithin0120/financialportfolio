@@ -30,8 +30,8 @@ export async function POST(request: NextRequest) {
         client_user_id: userId,
       },
       client_name: 'FinTech Dashboard',
-      products: ['transactions'],
-      country_codes: ['US'],
+      products: ['transactions'] as any,
+      country_codes: ['US'] as any,
       language: 'en',
       webhook: `${process.env.NEXTAUTH_URL}/api/plaid/webhook`,
     })
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error creating link token:', error)
     return NextResponse.json(
-      { error: 'Failed to create link token' },
+      { error: 'An error occurred. Please try again.' },
       { status: 500 }
     )
   }

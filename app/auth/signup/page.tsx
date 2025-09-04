@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { signIn } from 'next-auth/react'
 import Link from 'next/link'
 import { Eye, EyeOff, Lock, Mail, User, ArrowLeft } from 'lucide-react'
 import { motion } from 'framer-motion'
@@ -41,8 +42,16 @@ export default function SignUpPage() {
       return
     }
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long')
+    if (password.length < 12) {
+      setError('Password must be at least 12 characters long')
+      setIsLoading(false)
+      return
+    }
+
+    // Validate password complexity
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/
+    if (!passwordRegex.test(password)) {
+      setError('Password must contain uppercase, lowercase, number, and special character')
       setIsLoading(false)
       return
     }
@@ -54,8 +63,6 @@ export default function SignUpPage() {
     }
 
     try {
-      console.log('Attempting to create account for:', email.trim().toLowerCase())
-      
       const response = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: {
@@ -69,25 +76,32 @@ export default function SignUpPage() {
       })
 
       const data = await response.json()
-      console.log('Signup response:', { status: response.status, data })
 
       if (response.ok) {
-        console.log('Account created successfully, redirecting to signin...')
         // Clear form
         setName('')
         setEmail('')
         setPassword('')
         setConfirmPassword('')
         
-        // Redirect to sign in with success message
-        console.log('About to redirect to signin page...')
-        window.location.href = '/auth/signin?message=Account created successfully! Please sign in.'
+        // Auto sign-in the user
+        const signInResult = await signIn('credentials', {
+          email: email.trim().toLowerCase(),
+          password: password,
+          redirect: false,
+        })
+
+        if (signInResult?.ok || !signInResult?.error) {
+          // Redirect to bank connection page
+          window.location.href = '/auth/connect-bank'
+        } else {
+          // If auto sign-in fails, redirect to sign-in page
+          window.location.href = '/auth/signin?message=Account created successfully! Please sign in.'
+        }
       } else {
-        console.error('Signup failed:', data.error)
         setError(data.error || 'Failed to create account')
       }
     } catch (error) {
-      console.error('Signup error:', error)
       setError('An error occurred. Please try again.')
     } finally {
       setIsLoading(false)

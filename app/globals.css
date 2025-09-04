@@ -288,8 +288,8 @@
 
   /* Professional Metrics Cards */
   .metric-card {
-  @apply bg-white/20 backdrop-blur-md border border-white/30 rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200;
-  background: linear-gradient(135deg, rgba(255,255,255,0.25), rgba(255,255,255,0.15));
+  @apply bg-slate-800/80 backdrop-blur-md border border-slate-700/50 rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200;
+  background: linear-gradient(135deg, rgba(30,41,59,0.9), rgba(51,65,85,0.8));
   position: relative;
   overflow: hidden;
   min-height: 140px;
@@ -297,8 +297,8 @@
 
   .metric-card:hover {
     @apply transform -translate-y-1 scale-105;
-    box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.2);
-    background: linear-gradient(135deg, rgba(255,255,255,0.35), rgba(255,255,255,0.25));
+    box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(135deg, rgba(30,41,59,1), rgba(51,65,85,0.9));
   }
 
   .metric-card::before {
@@ -308,7 +308,7 @@
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    background: linear-gradient(90deg, transparent, rgba(148,163,184,0.3), transparent);
     transition: left 0.5s;
   }
 
@@ -334,8 +334,8 @@
 
   /* Professional Chart Containers */
   .chart-container {
-      @apply bg-white/30 backdrop-blur-md border border-white/40 rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200;
-    background: linear-gradient(135deg, rgba(255,255,255,0.4), rgba(255,255,255,0.3));
+      @apply bg-slate-800/80 backdrop-blur-md border border-slate-700/50 rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200;
+    background: linear-gradient(135deg, rgba(30,41,59,0.9), rgba(51,65,85,0.8));
     position: relative;
     overflow: hidden;
     min-height: 350px;
@@ -343,8 +343,8 @@
 
   .chart-container:hover {
     @apply transform -translate-y-1 scale-105;
-    box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.2);
-    background: linear-gradient(135deg, rgba(255,255,255,0.5), rgba(255,255,255,0.4));
+    box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(135deg, rgba(30,41,59,1), rgba(51,65,85,0.9));
   }
 
   /* Professional Navigation */
@@ -399,22 +399,22 @@
 
   /* Professional Tables */
   .data-table {
-      @apply w-full bg-white/30 backdrop-blur-md border border-white/40 rounded-lg overflow-hidden shadow-lg;
+      @apply w-full bg-slate-800/80 backdrop-blur-md border border-slate-700/50 rounded-lg overflow-hidden shadow-lg;
   animation: fadeInUp 0.6s ease-out;
-    background: linear-gradient(135deg, rgba(255,255,255,0.4), rgba(255,255,255,0.3));
+    background: linear-gradient(135deg, rgba(30,41,59,0.9), rgba(51,65,85,0.8));
     min-height: 350px;
   }
 
   .data-table th {
-    @apply bg-white/40 backdrop-blur-sm px-6 py-4 text-left text-xs font-semibold text-white/80 uppercase tracking-wider;
+    @apply bg-slate-700/60 backdrop-blur-sm px-6 py-4 text-left text-xs font-semibold text-white/80 uppercase tracking-wider;
   }
 
   .data-table td {
-    @apply px-6 py-4 whitespace-nowrap text-sm text-white border-t border-white/30;
+    @apply px-6 py-4 whitespace-nowrap text-sm text-white border-t border-slate-600/30;
   }
 
   .data-table tr:hover {
-    @apply bg-white/30;
+    @apply bg-slate-700/40;
   }
 
   /* Professional Focus States */

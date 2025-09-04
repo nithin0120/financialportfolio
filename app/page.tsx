@@ -25,7 +25,7 @@ export default function Dashboard() {
   const { data: session } = useSession()
   const { accounts, loading: accountsLoading } = useAccounts()
   const { transactions, loading: transactionsLoading } = useTransactions()
-  const portfolioMetrics = usePortfolioMetrics()
+  const portfolioMetrics = usePortfolioMetrics() || { loading: true }
 
 
   // Simplified animations for better performance
@@ -92,7 +92,7 @@ export default function Dashboard() {
           className="mb-8"
         >
           <h1 className="text-3xl font-bold text-white drop-shadow-lg mb-2">
-            Welcome back, {session?.user?.name || 'User'}!
+            Welcome back, {session?.user?.name || session?.user?.email?.split('@')[0] || 'User'}!
           </h1>
           <p className="text-white opacity-90 drop-shadow-md text-lg">
             Here's your financial overview for today.
@@ -161,13 +161,13 @@ export default function Dashboard() {
 
         {/* Recent Transactions */}
         <div className="data-table mb-8">
-          <div className="px-6 py-4 border-b border-white border-opacity-20">
+          <div className="px-6 py-4 border-b border-slate-600 border-opacity-30">
             <h3 className="text-lg font-semibold text-white drop-shadow-md">Recent Transactions</h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-white border-opacity-10">
+                <tr className="border-b border-slate-600 border-opacity-20">
                   <th className="px-6 py-3 text-left text-xs font-medium text-white opacity-70 uppercase tracking-wider">
                     Description
                   </th>
@@ -182,19 +182,19 @@ export default function Dashboard() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white divide-opacity-10">
+              <tbody className="divide-y divide-slate-600 divide-opacity-20">
                 {recentTransactions.map((transaction, index) => (
-                  <tr key={transaction.id || index} className="hover:bg-white hover:bg-opacity-5 transition-colors duration-200">
+                  <tr key={transaction.id || index} className="hover:bg-slate-700 hover:bg-opacity-30 transition-colors duration-200">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-white">
-                        {transaction.name || 'Transaction'}
+                        {transaction.plaid_transaction_id || 'Transaction'}
                       </div>
                       <div className="text-sm text-white opacity-60">
                         {transaction.category?.[0] || 'Other'}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-white opacity-80">
-                      {transaction.account_name || 'Account'}
+                      {transaction.account_id || 'Account'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`text-sm font-medium ${
@@ -215,7 +215,7 @@ export default function Dashboard() {
 
         {/* System Status */}
         <div className="chart-container">
-          <div className="px-6 py-4 border-b border-white border-opacity-20">
+          <div className="px-6 py-4 border-b border-slate-600 border-opacity-30">
             <h3 className="text-lg font-semibold text-white drop-shadow-md">System Status</h3>
           </div>
           <div className="p-6">

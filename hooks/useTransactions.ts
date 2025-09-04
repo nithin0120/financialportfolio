@@ -76,11 +76,37 @@ export function useTransactions(accountId?: string, limit: number = 50) {
     fetchTransactions()
   }, [session?.user?.id, accountId, limit])
 
+  const syncTransactions = async () => {
+    if (!session?.user?.id) return
+
+    try {
+      const response = await fetch('/api/plaid/sync-transactions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        // Refresh transactions after sync
+        await fetchTransactions()
+        return { success: true, message: data.message }
+      } else {
+        return { success: false, error: data.error }
+      }
+    } catch (error) {
+      return { success: false, error: 'An error occurred while syncing transactions' }
+    }
+  }
+
   return {
     transactions,
     loading,
     error,
     count,
     refetch: fetchTransactions,
+    syncTransactions,
   }
 }

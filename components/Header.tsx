@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { useSession, signOut } from 'next-auth/react'
-import { Search, Bell, User, Menu, Settings, Shield, LogOut, Key, CreditCard, HelpCircle, ChevronDown } from 'lucide-react'
+import { useSession, signOut, signIn } from 'next-auth/react'
+import { Search, Bell, User, Menu, Settings, Shield, LogOut, Key, CreditCard, HelpCircle, ChevronDown, LogIn } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface HeaderProps {
@@ -10,7 +10,7 @@ interface HeaderProps {
 }
 
 export default function Header({ onMenuToggle }: HeaderProps) {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
   const profileRef = useRef<HTMLDivElement>(null)
@@ -35,6 +35,10 @@ export default function Header({ onMenuToggle }: HeaderProps) {
 
   const handleSignOut = () => {
     signOut({ callbackUrl: '/auth/signin' })
+  }
+
+  const handleSignIn = () => {
+    signIn('credentials', { callbackUrl: '/' })
   }
 
   const profileMenuItems = [
@@ -156,152 +160,167 @@ export default function Header({ onMenuToggle }: HeaderProps) {
 
         {/* Right side - User actions */}
         <div className="flex items-center space-x-3">
-          {/* Notifications */}
-          <div className="relative" ref={notificationsRef}>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-              className="relative p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors duration-200"
-              aria-label="Notifications"
-            >
-              <Bell className="h-5 w-5 text-white" />
-              {notifications.some(n => n.unread) && (
-                <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full"></span>
-              )}
-            </motion.button>
-
-            <AnimatePresence>
-              {isNotificationsOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                  transition={{ duration: 0.2 }}
-                  className="absolute right-0 mt-2 w-80 bg-white/20 backdrop-blur-xl border border-white/30 rounded-lg shadow-2xl z-50"
+          {status === 'authenticated' ? (
+            <>
+              {/* Notifications */}
+              <div className="relative" ref={notificationsRef}>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                  className="relative p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors duration-200"
+                  aria-label="Notifications"
                 >
-                  <div className="p-4 border-b border-white/20">
-                    <h3 className="text-sm font-semibold text-white">Notifications</h3>
+                  <Bell className="h-5 w-5 text-white" />
+                  {notifications.some(n => n.unread) && (
+                    <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full"></span>
+                  )}
+                </motion.button>
+
+                <AnimatePresence>
+                  {isNotificationsOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute right-0 mt-2 w-80 bg-slate-800/95 backdrop-blur-xl border border-slate-600/50 rounded-lg shadow-2xl z-50"
+                    >
+                      <div className="p-4 border-b border-slate-600/30">
+                        <h3 className="text-sm font-semibold text-white">Notifications</h3>
+                      </div>
+                      <div className="max-h-64 overflow-y-auto">
+                        {notifications.map((notification) => (
+                          <div
+                            key={notification.id}
+                            className={`p-4 border-b border-slate-600/20 hover:bg-slate-700/30 transition-colors duration-200 ${
+                              notification.unread ? 'bg-slate-700/20' : ''
+                            }`}
+                          >
+                            <div className="flex items-start space-x-3">
+                              <div className={`w-2 h-2 rounded-full mt-2 ${
+                                notification.unread ? 'bg-blue-400' : 'bg-transparent'
+                              }`}></div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-white">{notification.title}</p>
+                                <p className="text-xs text-white/70 mt-1">{notification.message}</p>
+                                <p className="text-xs text-white/50 mt-1">{notification.time}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="p-3 border-t border-slate-600/30">
+                        <button className="w-full text-xs text-white/70 hover:text-white transition-colors duration-200">
+                          View all notifications
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Profile Dropdown */}
+              <div className="relative" ref={profileRef}>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="flex items-center space-x-2 p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors duration-200"
+                  aria-label="User profile"
+                >
+                  <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                    <User className="h-4 w-4 text-white" />
                   </div>
-                  <div className="max-h-64 overflow-y-auto">
-                    {notifications.map((notification) => (
-                      <div
-                        key={notification.id}
-                        className={`p-4 border-b border-white/10 hover:bg-white/10 transition-colors duration-200 ${
-                          notification.unread ? 'bg-white/5' : ''
-                        }`}
-                      >
-                        <div className="flex items-start space-x-3">
-                          <div className={`w-2 h-2 rounded-full mt-2 ${
-                            notification.unread ? 'bg-blue-400' : 'bg-transparent'
-                          }`}></div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-white">{notification.title}</p>
-                            <p className="text-xs text-white/70 mt-1">{notification.message}</p>
-                            <p className="text-xs text-white/50 mt-1">{notification.time}</p>
+                  <div className="hidden sm:block text-left">
+                    <p className="text-sm font-medium text-white">
+                      {session?.user?.name || 'User'}
+                    </p>
+                    <p className="text-xs text-white/60">Dashboard</p>
+                  </div>
+                  <ChevronDown className={`h-4 w-4 text-white/60 transition-transform duration-200 ${
+                    isProfileOpen ? 'rotate-180' : ''
+                  }`} />
+                </motion.button>
+
+                <AnimatePresence>
+                  {isProfileOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute right-0 mt-2 w-64 bg-slate-800/95 backdrop-blur-xl border border-slate-600/50 rounded-lg shadow-2xl z-50"
+                    >
+                      {/* User Info */}
+                      <div className="p-4 border-b border-slate-600/30">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-slate-700/60 rounded-full flex items-center justify-center">
+                            <User className="h-5 w-5 text-white" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-white">
+                              {session?.user?.name || 'User'}
+                            </p>
+                            <p className="text-xs text-white/60">
+                              {session?.user?.email || 'user@example.com'}
+                            </p>
                           </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                  <div className="p-3 border-t border-white/20">
-                    <button className="w-full text-xs text-white/70 hover:text-white transition-colors duration-200">
-                      View all notifications
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
 
-          {/* Profile Dropdown */}
-          <div className="relative" ref={profileRef}>
+                      {/* Menu Items */}
+                      <div className="py-2">
+                        {profileMenuItems.map((item, index) => (
+                          <motion.button
+                            key={item.label}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.05 }}
+                                                    onClick={item.onClick}
+                        className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-slate-700/40 transition-colors duration-200"
+                          >
+                            <item.icon className="h-4 w-4 text-white/70" />
+                            <div>
+                              <p className="text-sm font-medium text-white">{item.label}</p>
+                              <p className="text-xs text-white/60">{item.description}</p>
+                            </div>
+                          </motion.button>
+                        ))}
+                      </div>
+
+                                        {/* Sign Out */}
+                  <div className="border-t border-slate-600/30 p-2">
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={handleSignOut}
+                          className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-red-500/20 transition-colors duration-200 rounded-lg"
+                        >
+                          <LogOut className="h-4 w-4 text-red-400" />
+                          <div>
+                            <p className="text-sm font-medium text-red-400">Sign Out</p>
+                            <p className="text-xs text-red-400/60">Log out of your account</p>
+                          </div>
+                        </motion.button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </>
+          ) : (
+            /* Sign In Button */
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => setIsProfileOpen(!isProfileOpen)}
-              className="flex items-center space-x-2 p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors duration-200"
-              aria-label="User profile"
+              onClick={handleSignIn}
+              className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors duration-200"
             >
-              <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                <User className="h-4 w-4 text-white" />
-              </div>
-              <div className="hidden sm:block text-left">
-                <p className="text-sm font-medium text-white">
-                  {session?.user?.name || 'User'}
-                </p>
-                <p className="text-xs text-white/60">Dashboard</p>
-              </div>
-              <ChevronDown className={`h-4 w-4 text-white/60 transition-transform duration-200 ${
-                isProfileOpen ? 'rotate-180' : ''
-              }`} />
+              <LogIn className="h-4 w-4 text-white" />
+              <span className="text-sm font-medium text-white">Sign In</span>
             </motion.button>
-
-            <AnimatePresence>
-              {isProfileOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                  transition={{ duration: 0.2 }}
-                  className="absolute right-0 mt-2 w-64 bg-white/20 backdrop-blur-xl border border-white/30 rounded-lg shadow-2xl z-50"
-                >
-                  {/* User Info */}
-                  <div className="p-4 border-b border-white/20">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                        <User className="h-5 w-5 text-white" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-white">
-                          {session?.user?.name || 'User'}
-                        </p>
-                        <p className="text-xs text-white/60">
-                          {session?.user?.email || 'user@example.com'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Menu Items */}
-                  <div className="py-2">
-                    {profileMenuItems.map((item, index) => (
-                      <motion.button
-                        key={item.label}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.05 }}
-                        onClick={item.onClick}
-                        className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-white/10 transition-colors duration-200"
-                      >
-                        <item.icon className="h-4 w-4 text-white/70" />
-                        <div>
-                          <p className="text-sm font-medium text-white">{item.label}</p>
-                          <p className="text-xs text-white/60">{item.description}</p>
-                        </div>
-                      </motion.button>
-                    ))}
-                  </div>
-
-                  {/* Sign Out */}
-                  <div className="border-t border-white/20 p-2">
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={handleSignOut}
-                      className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-red-500/20 transition-colors duration-200 rounded-lg"
-                    >
-                      <LogOut className="h-4 w-4 text-red-400" />
-                      <div>
-                        <p className="text-sm font-medium text-red-400">Sign Out</p>
-                        <p className="text-xs text-red-400/60">Log out of your account</p>
-                      </div>
-                    </motion.button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+          )}
         </div>
       </div>
     </header>

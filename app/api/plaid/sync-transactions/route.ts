@@ -41,10 +41,13 @@ export async function POST(request: NextRequest) {
     for (const account of accounts) {
       try {
         // Get transactions from Plaid
+        const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+        const endDate = new Date()
+        
         const transactionsResponse = await plaidClient.transactionsGet({
           access_token: account.plaid_access_token || '', // We need to store this
-          start_date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
-          end_date: new Date(),
+          start_date: startDate.toISOString().split('T')[0], // Last 30 days
+          end_date: endDate.toISOString().split('T')[0],
         })
 
         const transactions = transactionsResponse.data.transactions
@@ -89,7 +92,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error in sync transactions API:', error)
     return NextResponse.json(
-      { error: 'Failed to sync transactions' },
+      { error: 'An error occurred. Please try again.' },
       { status: 500 }
     )
   }

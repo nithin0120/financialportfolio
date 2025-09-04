@@ -49,7 +49,7 @@ export default function PortfolioChart() {
       const volatility = (Math.random() - 0.5) * 0.1 // ±5% random volatility
       
       const value = baseValue * growthFactor * (1 + volatility)
-      const pnl = index === 0 ? 0 : value - (data[index - 1]?.value || baseValue)
+      const pnl: number = index === 0 ? 0 : value - (data[index - 1]?.value || baseValue)
       
       data.push({
         date: month,

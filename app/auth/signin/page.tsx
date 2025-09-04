@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeOff, Lock, Mail, ArrowLeft } from 'lucide-react'
 import { motion } from 'framer-motion'
 
-export default function SignInPage() {
+function SignInContent() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -30,25 +30,21 @@ export default function SignInPage() {
     setError('')
 
     try {
-      console.log('Attempting to sign in with:', email)
-      
       const result = await signIn('credentials', {
         email,
         password,
         redirect: false,
       })
 
-      console.log('SignIn result:', result)
-
       if (result?.error) {
-        console.error('SignIn error:', result.error)
         setError('Invalid email or password')
+      } else if (result?.ok) {
+        router.push('/')
       } else {
-        console.log('SignIn successful, redirecting to dashboard...')
+        // Sometimes NextAuth returns success without explicit ok: true
         router.push('/')
       }
     } catch (error) {
-      console.error('SignIn exception:', error)
       setError('An error occurred. Please try again.')
     } finally {
       setIsLoading(false)
@@ -187,5 +183,17 @@ export default function SignInPage() {
         </motion.div>
       </div>
     </div>
+  )
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+      </div>
+    }>
+      <SignInContent />
+    </Suspense>
   )
 }

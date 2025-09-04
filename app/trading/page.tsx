@@ -1,19 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { TrendingUp, TrendingDown, DollarSign, BarChart3, Search, Plus, Minus } from 'lucide-react'
+import { TrendingUp, TrendingDown, BarChart3, Search, Plus, Minus, RefreshCw } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { useMarketData } from '@/hooks/useMarketData'
 
-// Mock market data
-const marketData = [
-  { symbol: 'AAPL', name: 'Apple Inc.', price: 150.25, change: 2.15, changePercent: 1.45, volume: '45.2M' },
-  { symbol: 'MSFT', name: 'Microsoft Corp.', price: 320.45, change: -1.20, changePercent: -0.37, volume: '32.1M' },
-  { symbol: 'GOOGL', name: 'Alphabet Inc.', price: 128.90, change: 0.85, changePercent: 0.66, volume: '28.7M' },
-  { symbol: 'TSLA', name: 'Tesla Inc.', price: 245.80, change: 8.45, changePercent: 3.56, volume: '52.3M' },
-  { symbol: 'AMZN', name: 'Amazon.com Inc.', price: 138.75, change: -2.10, changePercent: -1.49, volume: '38.9M' },
-  { symbol: 'NVDA', name: 'NVIDIA Corp.', price: 445.60, change: 12.30, changePercent: 2.84, volume: '41.2M' },
-]
-
+// Mock chart data (keeping this as mock since intraday data requires premium API)
 const chartData = [
   { time: '09:30', price: 148.50 },
   { time: '10:00', price: 149.20 },
@@ -28,16 +20,31 @@ const chartData = [
 
 export default function TradingPage() {
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedStock, setSelectedStock] = useState(marketData[0])
   const [quantity, setQuantity] = useState(1)
   const [orderType, setOrderType] = useState('buy')
+  
+  const { data: marketData, loading, error, refetch } = useMarketData()
+  
+  // Set default selected stock when data loads
+  const [selectedStock, setSelectedStock] = useState<any>(null)
+  
+  useEffect(() => {
+    if (marketData?.stocks && marketData.stocks.length > 0 && !selectedStock) {
+      setSelectedStock(marketData.stocks[0])
+    }
+  }, [marketData, selectedStock])
 
-  const filteredStocks = marketData.filter(stock =>
+  const filteredStocks = marketData?.stocks?.filter(stock =>
     stock.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
     stock.name.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  ) || []
 
   const handleTrade = () => {
+    if (!selectedStock) {
+      alert('Please select a stock to trade')
+      return
+    }
+    
     const action = orderType === 'buy' ? 'Buy' : 'Sell'
     const total = selectedStock.price * quantity
     alert(`${action} order: ${quantity} shares of ${selectedStock.symbol} at $${selectedStock.price} = $${total.toFixed(2)}`)
@@ -48,70 +55,113 @@ export default function TradingPage() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white drop-shadow-lg">Trading Dashboard</h1>
-          <p className="mt-2 text-white opacity-90 drop-shadow-md">
-            Real-time market data and trading interface
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-white drop-shadow-lg">Trading Dashboard</h1>
+              <p className="mt-2 text-white opacity-90 drop-shadow-md">
+                Real-time market data and trading interface
+              </p>
+            </div>
+            <button
+              onClick={refetch}
+              disabled={loading}
+              className="bg-slate-700/50 hover:bg-slate-600/50 disabled:opacity-50 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center space-x-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              <span>Refresh</span>
+            </button>
+          </div>
+          {marketData?.lastUpdated && (
+            <p className="text-xs text-white/50 mt-2">
+              Last updated: {new Date(marketData.lastUpdated).toLocaleTimeString()}
+            </p>
+          )}
         </div>
 
         {/* Market Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 rounded-lg p-6">
+          <div className="metric-card">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-white opacity-90 mb-1">Market Status</p>
-                <p className="text-lg font-bold text-emerald-400">Open</p>
+                <p className="text-sm font-medium text-white/80 mb-1">Market Status</p>
+                <p className={`text-lg font-bold ${marketData?.marketStatus === 'open' ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {loading ? '...' : marketData?.marketStatus === 'open' ? 'Open' : 'Closed'}
+                </p>
               </div>
-              <div className="p-3 bg-white bg-opacity-30 rounded-lg">
+              <div className="p-3 bg-slate-700/50 rounded-lg">
                 <BarChart3 className="h-6 w-6 text-white" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 rounded-lg p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-white opacity-90 mb-1">S&P 500</p>
-                <p className="text-lg font-bold text-white">4,567.89</p>
-                <p className="text-sm text-emerald-400">+12.34 (+0.27%)</p>
-              </div>
-              <div className="p-3 bg-white bg-opacity-30 rounded-lg">
-                <TrendingUp className="h-6 w-6 text-emerald-400" />
+          {marketData?.indices?.SPY && (
+            <div className="metric-card">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-white/80 mb-1">S&P 500</p>
+                  <p className="text-lg font-bold text-white">{marketData.indices.SPY.price.toFixed(2)}</p>
+                  <p className={`text-sm ${marketData.indices.SPY.change >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {marketData.indices.SPY.change >= 0 ? '+' : ''}{marketData.indices.SPY.change.toFixed(2)} ({marketData.indices.SPY.changePercent >= 0 ? '+' : ''}{marketData.indices.SPY.changePercent.toFixed(2)}%)
+                  </p>
+                </div>
+                <div className="p-3 bg-slate-700/50 rounded-lg">
+                  {marketData.indices.SPY.change >= 0 ? (
+                    <TrendingUp className="h-6 w-6 text-emerald-400" />
+                  ) : (
+                    <TrendingDown className="h-6 w-6 text-red-400" />
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
-          <div className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 rounded-lg p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-white opacity-90 mb-1">NASDAQ</p>
-                <p className="text-lg font-bold text-white">14,234.56</p>
-                <p className="text-sm text-emerald-400">+45.67 (+0.32%)</p>
-              </div>
-              <div className="p-3 bg-white bg-opacity-30 rounded-lg">
-                <TrendingUp className="h-6 w-6 text-emerald-400" />
+          {marketData?.indices?.QQQ && (
+            <div className="metric-card">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-white/80 mb-1">NASDAQ</p>
+                  <p className="text-lg font-bold text-white">{marketData.indices.QQQ.price.toFixed(2)}</p>
+                  <p className={`text-sm ${marketData.indices.QQQ.change >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {marketData.indices.QQQ.change >= 0 ? '+' : ''}{marketData.indices.QQQ.change.toFixed(2)} ({marketData.indices.QQQ.changePercent >= 0 ? '+' : ''}{marketData.indices.QQQ.changePercent.toFixed(2)}%)
+                  </p>
+                </div>
+                <div className="p-3 bg-slate-700/50 rounded-lg">
+                  {marketData.indices.QQQ.change >= 0 ? (
+                    <TrendingUp className="h-6 w-6 text-emerald-400" />
+                  ) : (
+                    <TrendingDown className="h-6 w-6 text-red-400" />
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
-          <div className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 rounded-lg p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-white opacity-90 mb-1">DOW</p>
-                <p className="text-lg font-bold text-white">34,567.89</p>
-                <p className="text-sm text-red-400">-23.45 (-0.07%)</p>
-              </div>
-              <div className="p-3 bg-white bg-opacity-30 rounded-lg">
-                <TrendingDown className="h-6 w-6 text-red-400" />
+          {marketData?.indices?.DIA && (
+            <div className="metric-card">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-white/80 mb-1">DOW</p>
+                  <p className="text-lg font-bold text-white">{marketData.indices.DIA.price.toFixed(2)}</p>
+                  <p className={`text-sm ${marketData.indices.DIA.change >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {marketData.indices.DIA.change >= 0 ? '+' : ''}{marketData.indices.DIA.change.toFixed(2)} ({marketData.indices.DIA.changePercent >= 0 ? '+' : ''}{marketData.indices.DIA.changePercent.toFixed(2)}%)
+                  </p>
+                </div>
+                <div className="p-3 bg-slate-700/50 rounded-lg">
+                  {marketData.indices.DIA.change >= 0 ? (
+                    <TrendingUp className="h-6 w-6 text-emerald-400" />
+                  ) : (
+                    <TrendingDown className="h-6 w-6 text-red-400" />
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Stock List */}
           <div className="lg:col-span-1">
-            <div className="bg-white bg-opacity-30 backdrop-blur-md border border-white border-opacity-40 rounded-lg p-6">
+            <div className="chart-container">
               <h3 className="text-lg font-semibold text-white mb-4 drop-shadow-md">Market Watch</h3>
               
               {/* Search */}
@@ -128,30 +178,52 @@ export default function TradingPage() {
 
               {/* Stock List */}
               <div className="space-y-2 max-h-96 overflow-y-auto">
-                {filteredStocks.map((stock) => (
-                  <div
-                    key={stock.symbol}
-                    onClick={() => setSelectedStock(stock)}
-                    className={`p-3 rounded-lg cursor-pointer transition-all duration-200 ${
-                      selectedStock.symbol === stock.symbol
-                        ? 'bg-white bg-opacity-30 border border-white border-opacity-50'
-                        : 'bg-white bg-opacity-10 hover:bg-opacity-20 border border-white border-opacity-20'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-white">{stock.symbol}</p>
-                        <p className="text-sm text-white opacity-70">{stock.name}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium text-white">${stock.price.toFixed(2)}</p>
-                        <p className={`text-sm ${stock.change >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                          {stock.change >= 0 ? '+' : ''}{stock.change.toFixed(2)} ({stock.changePercent >= 0 ? '+' : ''}{stock.changePercent.toFixed(2)}%)
-                        </p>
+                {loading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
+                    <p className="text-white/70">Loading market data...</p>
+                  </div>
+                ) : error ? (
+                  <div className="text-center py-8">
+                    <p className="text-red-400 mb-2">Failed to load market data</p>
+                    <button
+                      onClick={refetch}
+                      className="bg-slate-700/50 hover:bg-slate-600/50 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center space-x-2 mx-auto"
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                      <span>Retry</span>
+                    </button>
+                  </div>
+                ) : filteredStocks.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-white/70">No stocks found</p>
+                  </div>
+                ) : (
+                  filteredStocks.map((stock) => (
+                    <div
+                      key={stock.symbol}
+                      onClick={() => setSelectedStock(stock)}
+                      className={`p-3 rounded-lg cursor-pointer transition-all duration-200 ${
+                        selectedStock?.symbol === stock.symbol
+                          ? 'bg-slate-700/50 border border-slate-600/50'
+                          : 'bg-slate-700/30 hover:bg-slate-600/40 border border-slate-600/30'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-white">{stock.symbol}</p>
+                          <p className="text-sm text-white/70">{stock.name}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium text-white">${stock.price.toFixed(2)}</p>
+                          <p className={`text-sm ${stock.change >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                            {stock.change >= 0 ? '+' : ''}{stock.change.toFixed(2)} ({stock.changePercent >= 0 ? '+' : ''}{stock.changePercent.toFixed(2)}%)
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           </div>
@@ -160,9 +232,9 @@ export default function TradingPage() {
           <div className="lg:col-span-2">
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
               {/* Price Chart */}
-              <div className="bg-white bg-opacity-30 backdrop-blur-md border border-white border-opacity-40 rounded-lg p-6">
+              <div className="chart-container">
                 <h3 className="text-lg font-semibold text-white mb-4 drop-shadow-md">
-                  {selectedStock.symbol} - {selectedStock.name}
+                  {selectedStock ? `${selectedStock.symbol} - ${selectedStock.name}` : 'Select a stock to view chart'}
                 </h3>
                 <ResponsiveContainer width="100%" height={250}>
                   <LineChart data={chartData}>
@@ -196,22 +268,24 @@ export default function TradingPage() {
                   </LineChart>
                 </ResponsiveContainer>
                 
-                <div className="mt-4 grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-white opacity-70">Current Price</p>
-                    <p className="text-xl font-bold text-white">${selectedStock.price.toFixed(2)}</p>
+                {selectedStock && (
+                  <div className="mt-4 grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-white/70">Current Price</p>
+                      <p className="text-xl font-bold text-white">${selectedStock.price.toFixed(2)}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-white/70">Change</p>
+                      <p className={`text-xl font-bold ${selectedStock.change >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {selectedStock.change >= 0 ? '+' : ''}{selectedStock.change.toFixed(2)} ({selectedStock.changePercent >= 0 ? '+' : ''}{selectedStock.changePercent.toFixed(2)}%)
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-white opacity-70">Change</p>
-                    <p className={`text-xl font-bold ${selectedStock.change >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                      {selectedStock.change >= 0 ? '+' : ''}{selectedStock.change.toFixed(2)} ({selectedStock.changePercent >= 0 ? '+' : ''}{selectedStock.changePercent.toFixed(2)}%)
-                    </p>
-                  </div>
-                </div>
+                )}
               </div>
 
               {/* Trading Panel */}
-              <div className="bg-white bg-opacity-30 backdrop-blur-md border border-white border-opacity-40 rounded-lg p-6">
+              <div className="chart-container">
                 <h3 className="text-lg font-semibold text-white mb-4 drop-shadow-md">Place Order</h3>
                 
                 <div className="space-y-4">
@@ -268,37 +342,43 @@ export default function TradingPage() {
                   </div>
 
                   {/* Order Summary */}
-                  <div className="bg-white bg-opacity-10 rounded-lg p-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-white opacity-90">Total Value</span>
-                      <span className="text-white font-medium">
-                        ${(selectedStock.price * quantity).toFixed(2)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-white opacity-90">Commission</span>
-                      <span className="text-white font-medium">$0.00</span>
-                    </div>
-                    <div className="border-t border-white border-opacity-20 mt-2 pt-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-white font-medium">Total Cost</span>
-                        <span className="text-white font-bold">
+                  {selectedStock && (
+                    <div className="bg-slate-700/30 rounded-lg p-4">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-white/90">Total Value</span>
+                        <span className="text-white font-medium">
                           ${(selectedStock.price * quantity).toFixed(2)}
                         </span>
                       </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-white/90">Commission</span>
+                        <span className="text-white font-medium">$0.00</span>
+                      </div>
+                      <div className="border-t border-white/20 mt-2 pt-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-white font-medium">Total Cost</span>
+                          <span className="text-white font-bold">
+                            ${(selectedStock.price * quantity).toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Place Order Button */}
                   <button
                     onClick={handleTrade}
-                    className={`w-full py-3 px-4 rounded-lg font-medium text-white transition-all duration-200 ${
+                    disabled={!selectedStock}
+                    className={`w-full py-3 px-4 rounded-lg font-medium text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
                       orderType === 'buy'
                         ? 'bg-emerald-500 hover:bg-emerald-600'
                         : 'bg-red-500 hover:bg-red-600'
                     }`}
                   >
-                    {orderType === 'buy' ? 'Buy' : 'Sell'} {quantity} Share{quantity > 1 ? 's' : ''} of {selectedStock.symbol}
+                    {selectedStock 
+                      ? `${orderType === 'buy' ? 'Buy' : 'Sell'} ${quantity} Share${quantity > 1 ? 's' : ''} of ${selectedStock.symbol}`
+                      : 'Select a stock to trade'
+                    }
                   </button>
                 </div>
               </div>

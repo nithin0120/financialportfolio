@@ -40,13 +40,13 @@ const alerts = [
 const getStatusIcon = (status: string) => {
   switch (status) {
     case 'healthy':
-      return <CheckCircle className="h-5 w-5 text-success-600" />
+      return <CheckCircle className="h-5 w-5 text-green-400" />
     case 'warning':
-      return <AlertTriangle className="h-5 w-5 text-warning-600" />
+      return <AlertTriangle className="h-5 w-5 text-yellow-400" />
     case 'error':
-      return <XCircle className="h-5 w-5 text-danger-600" />
+      return <XCircle className="h-5 w-5 text-red-400" />
     default:
-      return <CheckCircle className="h-5 w-5 text-success-600" />
+      return <CheckCircle className="h-5 w-5 text-green-400" />
   }
 }
 
@@ -148,79 +148,79 @@ export default function InfrastructurePage() {
 
         {/* System Overview Cards */}
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-          <div className="card">
+          <div className="metric-card">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-dark-600">System Health</p>
+                <p className="text-sm font-medium text-white opacity-80">System Health</p>
                 <p className={`text-2xl font-bold ${
-                  systemHealth >= 95 ? 'text-success-600' : 
-                  systemHealth >= 80 ? 'text-warning-600' : 'text-danger-600'
+                  systemHealth >= 95 ? 'text-green-400' : 
+                  systemHealth >= 80 ? 'text-yellow-400' : 'text-red-400'
                 }`}>
                   {systemHealth}%
                 </p>
-                <p className="text-xs text-dark-500 mt-1">
+                <p className="text-xs text-white opacity-70 mt-1">
                   {systemHealth >= 95 ? 'All systems operational' : 
                    systemHealth >= 80 ? 'Minor issues detected' : 'Critical issues detected'}
                 </p>
               </div>
-              <div className={`p-3 rounded-full ${
-                systemHealth >= 95 ? 'bg-success-100 text-success-600' : 
-                systemHealth >= 80 ? 'bg-warning-100 text-warning-600' : 'bg-danger-100 text-danger-600'
+              <div className={`p-3 rounded-lg ${
+                systemHealth >= 95 ? 'bg-green-500/20 text-green-400' : 
+                systemHealth >= 80 ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'
               }`}>
                 <CheckCircle className="h-6 w-6" />
               </div>
             </div>
           </div>
 
-          <div className="card">
+          <div className="metric-card">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-dark-600">Active Services</p>
-                <p className="text-2xl font-bold text-dark-900">
+                <p className="text-sm font-medium text-white opacity-80">Active Services</p>
+                <p className="text-2xl font-bold text-white">
                   {dynamicServiceStatus.filter(s => s.status === 'healthy').length}/{dynamicServiceStatus.length}
                 </p>
-                <p className="text-xs text-dark-500 mt-1">
+                <p className="text-xs text-white opacity-70 mt-1">
                   {dynamicServiceStatus.filter(s => s.status === 'warning').length} warnings, {' '}
                   {dynamicServiceStatus.filter(s => s.status === 'error').length} errors
                 </p>
               </div>
-              <div className="p-3 rounded-full bg-primary-100 text-primary-600">
+              <div className="p-3 rounded-lg bg-blue-500/20 text-blue-400">
                 <Server className="h-6 w-6" />
               </div>
             </div>
           </div>
 
-          <div className="card">
+          <div className="metric-card">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-dark-600">Avg Response Time</p>
+                <p className="text-sm font-medium text-white opacity-80">Avg Response Time</p>
                 <p className={`text-2xl font-bold ${
-                  avgResponseTime < 100 ? 'text-success-600' : 
-                  avgResponseTime < 500 ? 'text-warning-600' : 'text-danger-600'
+                  avgResponseTime < 100 ? 'text-green-400' : 
+                  avgResponseTime < 500 ? 'text-yellow-400' : 'text-red-400'
                 }`}>
                   {avgResponseTime}ms
                 </p>
-                <p className="text-xs text-dark-500 mt-1">
+                <p className="text-xs text-white opacity-70 mt-1">
                   {avgResponseTime < 100 ? 'Excellent performance' : 
                    avgResponseTime < 500 ? 'Acceptable performance' : 'Performance degraded'}
                 </p>
               </div>
-              <div className="p-3 rounded-full bg-dark-100 text-dark-600">
+              <div className="p-3 rounded-lg bg-slate-600/20 text-slate-300">
                 <Activity className="h-6 w-6" />
               </div>
             </div>
           </div>
 
-          <div className="card">
+          <div className="metric-card">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-dark-600">Uptime</p>
-                <p className="text-2xl font-bold text-success-600">{uptime}</p>
-                <p className="text-xs text-dark-500 mt-1">
+                <p className="text-sm font-medium text-white opacity-80">Uptime</p>
+                <p className="text-2xl font-bold text-green-400">{uptime}</p>
+                <p className="text-xs text-white opacity-70 mt-1">
                   Last 30 days
                 </p>
               </div>
-              <div className="p-3 rounded-full bg-dark-100 text-dark-600">
+              <div className="p-3 rounded-lg bg-slate-600/20 text-slate-300">
                 <Cpu className="h-6 w-6" />
               </div>
             </div>
@@ -230,8 +230,8 @@ export default function InfrastructurePage() {
         {/* System Performance Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {/* CPU and Memory Usage */}
-          <div className="card">
-            <h3 className="text-lg font-semibold text-dark-900 mb-4">System Resources (24h)</h3>
+          <div className="chart-container">
+            <h3 className="text-lg font-semibold text-white mb-4 drop-shadow-md">System Resources (24h)</h3>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={dynamicSystemMetrics}>
@@ -245,14 +245,15 @@ export default function InfrastructurePage() {
                       <stop offset="95%" stopColor="#22c55e" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis dataKey="time" stroke="#64748b" fontSize={12} />
-                  <YAxis stroke="#64748b" fontSize={12} tickFormatter={(value) => `${value}%`} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#475569" />
+                  <XAxis dataKey="time" stroke="#94a3b8" fontSize={12} />
+                  <YAxis stroke="#94a3b8" fontSize={12} tickFormatter={(value) => `${value}%`} />
                   <Tooltip 
                     contentStyle={{
-                      backgroundColor: 'white',
-                      border: '1px solid #e2e8f0',
+                      backgroundColor: '#1e293b',
+                      border: '1px solid #475569',
                       borderRadius: '8px',
+                      color: '#f1f5f9',
                     }}
                     formatter={(value: number) => [`${value}%`, 'Usage']}
                   />
@@ -264,19 +265,20 @@ export default function InfrastructurePage() {
           </div>
 
           {/* Network and Disk Usage */}
-          <div className="card">
-            <h3 className="text-lg font-semibold text-dark-900 mb-4">Network & Disk (24h)</h3>
+          <div className="chart-container">
+            <h3 className="text-lg font-semibold text-white mb-4 drop-shadow-md">Network & Disk (24h)</h3>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={dynamicSystemMetrics}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis dataKey="time" stroke="#64748b" fontSize={12} />
-                  <YAxis stroke="#64748b" fontSize={12} tickFormatter={(value) => `${value}%`} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#475569" />
+                  <XAxis dataKey="time" stroke="#94a3b8" fontSize={12} />
+                  <YAxis stroke="#94a3b8" fontSize={12} tickFormatter={(value) => `${value}%`} />
                   <Tooltip 
                     contentStyle={{
-                      backgroundColor: 'white',
-                      border: '1px solid #e2e8f0',
+                      backgroundColor: '#1e293b',
+                      border: '1px solid #475569',
                       borderRadius: '8px',
+                      color: '#f1f5f9',
                     }}
                     formatter={(value: number) => [`${value}%`, 'Usage']}
                   />
@@ -290,32 +292,32 @@ export default function InfrastructurePage() {
 
         {/* Service Status Grid */}
         <div className="mb-8">
-          <div className="card">
-            <h3 className="text-lg font-semibold text-dark-900 mb-4">Service Status</h3>
+          <div className="chart-container">
+            <h3 className="text-lg font-semibold text-white mb-4 drop-shadow-md">Service Status</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {dynamicServiceStatus.map((service) => (
-                <div key={service.name} className="p-4 bg-dark-50 rounded-lg border border-dark-200">
+                <div key={service.name} className="p-4 bg-slate-700/40 rounded-lg border border-slate-600/30">
                   <div className="flex items-start justify-between mb-3">
-                    <div className="p-2 rounded-lg bg-white">
-                      <service.icon className="h-5 w-5 text-dark-600" />
+                    <div className="p-2 rounded-lg bg-slate-600/40">
+                      <service.icon className="h-5 w-5 text-slate-300" />
                     </div>
                     {getStatusIcon(service.status)}
                   </div>
-                  <h4 className="font-medium text-dark-900 mb-2">{service.name}</h4>
+                  <h4 className="font-medium text-white mb-2">{service.name}</h4>
                   <div className="space-y-1 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-dark-600">Status:</span>
+                      <span className="text-slate-300">Status:</span>
                       <span className={`status-indicator ${getStatusColor(service.status)}`}>
                         {service.status}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-dark-600">Uptime:</span>
-                      <span className="text-dark-900">{service.uptime}</span>
+                      <span className="text-slate-300">Uptime:</span>
+                      <span className="text-white">{service.uptime}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-dark-600">Response:</span>
-                      <span className="text-dark-900">{service.responseTime}</span>
+                      <span className="text-slate-300">Response:</span>
+                      <span className="text-white">{service.responseTime}</span>
                     </div>
                   </div>
                 </div>
@@ -325,19 +327,19 @@ export default function InfrastructurePage() {
         </div>
 
         {/* Recent Alerts */}
-        <div className="card">
-          <h3 className="text-lg font-semibold text-dark-900 mb-4">Recent Alerts</h3>
+        <div className="chart-container">
+          <h3 className="text-lg font-semibold text-white mb-4 drop-shadow-md">Recent Alerts</h3>
           <div className="space-y-3">
             {alerts.map((alert) => (
-              <div key={alert.id} className="flex items-center justify-between p-3 bg-dark-50 rounded-lg">
+              <div key={alert.id} className="flex items-center justify-between p-3 bg-slate-700/40 rounded-lg border border-slate-600/20">
                 <div className="flex items-center space-x-3">
                   <div className={`w-2 h-2 rounded-full ${
-                    alert.severity === 'error' ? 'bg-danger-500' : 
-                    alert.severity === 'warning' ? 'bg-warning-500' : 'bg-primary-500'
+                    alert.severity === 'error' ? 'bg-red-500' : 
+                    alert.severity === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
                   }`} />
                   <div>
-                    <p className="font-medium text-dark-900">{alert.message}</p>
-                    <p className="text-sm text-dark-600">{alert.service} • {alert.time}</p>
+                    <p className="font-medium text-white">{alert.message}</p>
+                    <p className="text-sm text-slate-300">{alert.service} • {alert.time}</p>
                   </div>
                 </div>
                 <span className={`status-indicator ${

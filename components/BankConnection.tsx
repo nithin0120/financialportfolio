@@ -2,7 +2,7 @@
 
 // Bank connection component using Plaid Link
 // This component handles the secure connection of bank accounts through Plaid's API
-import { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { usePlaidLink } from 'react-plaid-link'
 import { Building2, Link, CheckCircle, AlertCircle } from 'lucide-react'
@@ -20,10 +20,15 @@ export default function BankConnection({ onSuccess: onSuccessCallback }: BankCon
   const [isLoading, setIsLoading] = useState(false)      // Loading state for API calls
   const [error, setError] = useState('')                 // Error message display
   const [linkToken, setLinkToken] = useState<string | null>(null)  // Plaid link token
+  const [plaidTimeout, setPlaidTimeout] = useState<NodeJS.Timeout | null>(null)
 
   const createLinkToken = async () => {
-    if (!session?.user?.id) return
+    if (!session?.user?.id) {
+      console.error('No session or user ID')
+      return
+    }
 
+    console.log('Creating link token for user:', session.user.id)
     setIsLoading(true)
     setError('')
 
@@ -39,13 +44,26 @@ export default function BankConnection({ onSuccess: onSuccessCallback }: BankCon
       })
 
       const data = await response.json()
+      console.log('Link token response:', { status: response.status, data })
 
       if (response.ok) {
+        console.log('Link token created successfully:', data.linkToken)
         setLinkToken(data.linkToken)
+        
+        // Set a timeout to handle cases where Plaid Link doesn't become ready
+        const timeout = setTimeout(() => {
+          console.warn('Plaid Link timeout - clearing link token')
+          setLinkToken(null)
+          setError('Plaid Link failed to load. Please try again.')
+        }, 10000) // 10 second timeout
+        
+        setPlaidTimeout(timeout)
       } else {
+        console.error('Failed to create link token:', data.error)
         setError(data.error || 'Failed to create link token')
       }
     } catch (error) {
+      console.error('Error creating link token:', error)
       setError('An error occurred. Please try again.')
     } finally {
       setIsLoading(false)
@@ -53,8 +71,13 @@ export default function BankConnection({ onSuccess: onSuccessCallback }: BankCon
   }
 
   const handlePlaidSuccess = async (publicToken: string, metadata: any) => {
-    if (!session?.user?.id) return
+    if (!session?.user?.id) {
+      console.error('No session or user ID in Plaid success')
+      return
+    }
 
+    console.log('Plaid success:', { publicToken, metadata })
+    
     try {
       const response = await fetch('/api/plaid/exchange-token', {
         method: 'POST',
@@ -68,25 +91,61 @@ export default function BankConnection({ onSuccess: onSuccessCallback }: BankCon
       })
 
       const data = await response.json()
+      console.log('Exchange token response:', { status: response.status, data })
 
       if (response.ok) {
+        console.log('Bank account connected successfully')
         setLinkToken(null)
         onSuccessCallback?.()
       } else {
+        console.error('Failed to exchange token:', data.error)
         setError(data.error || 'Failed to connect bank account')
       }
     } catch (error) {
+      console.error('Error exchanging token:', error)
       setError('An error occurred while connecting your bank account.')
     }
   }
 
-  const config = {
-    token: linkToken!,
+  const { open, ready } = usePlaidLink({
+    token: linkToken,
     onSuccess: handlePlaidSuccess,
-    onExit: () => setLinkToken(null),
-  }
+    onExit: () => {
+      console.log('Plaid Link exited')
+      setLinkToken(null)
+      if (plaidTimeout) {
+        clearTimeout(plaidTimeout)
+        setPlaidTimeout(null)
+      }
+    },
+  })
 
-  const { open, ready } = usePlaidLink(config)
+  // Clear timeout when Plaid becomes ready
+  useEffect(() => {
+    if (ready && plaidTimeout) {
+      console.log('Plaid Link is ready - clearing timeout')
+      clearTimeout(plaidTimeout)
+      setPlaidTimeout(null)
+    }
+  }, [ready, plaidTimeout])
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (plaidTimeout) {
+        clearTimeout(plaidTimeout)
+      }
+    }
+  }, [plaidTimeout])
+
+  // Debug logging
+  console.log('BankConnection state:', { 
+    hasSession: !!session, 
+    userId: session?.user?.id, 
+    linkToken: !!linkToken, 
+    ready, 
+    isLoading 
+  })
 
   if (!session) {
     return (
@@ -126,22 +185,23 @@ export default function BankConnection({ onSuccess: onSuccessCallback }: BankCon
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3">
-          <button
-            onClick={createLinkToken}
-            disabled={isLoading}
-            className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-500 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
-          >
-            <Link className="h-4 w-4" />
-            <span>{isLoading ? 'Preparing...' : 'Connect Bank'}</span>
-          </button>
-
-          {linkToken && ready && (
+          {!linkToken ? (
+            <button
+              onClick={createLinkToken}
+              disabled={isLoading}
+              className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-500 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
+            >
+              <Link className="h-4 w-4" />
+              <span>{isLoading ? 'Preparing...' : 'Connect Bank'}</span>
+            </button>
+          ) : (
             <button
               onClick={() => open()}
-              className="flex-1 bg-white/10 hover:bg-white/20 border border-white/30 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
+              disabled={!ready}
+              className="flex-1 bg-green-500 hover:bg-green-600 disabled:bg-gray-500 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
             >
               <Building2 className="h-4 w-4" />
-              <span>Open Plaid</span>
+              <span>{ready ? 'Open Plaid Link' : 'Loading...'}</span>
             </button>
           )}
         </div>
