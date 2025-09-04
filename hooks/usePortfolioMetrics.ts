@@ -11,6 +11,8 @@ interface PortfolioMetrics {
   totalBankBalance: number
   dailyPnL: number
   dailyPnLPercent: number
+  totalPnLPercent: number
+  monthlySpending: number
   riskScore: string
   accountCount: number
   transactionCount: number
@@ -28,11 +30,27 @@ export function usePortfolioMetrics(): PortfolioMetrics {
     totalBankBalance: 0,
     dailyPnL: 0,
     dailyPnLPercent: 0,
+    totalPnLPercent: 0,
+    monthlySpending: 0,
     riskScore: 'Low',
     accountCount: 0,
     transactionCount: 0,
     loading: true
   })
+
+  // Ensure we always return a valid object
+  const safeMetrics: PortfolioMetrics = metrics || {
+    totalPortfolioValue: 0,
+    totalBankBalance: 0,
+    dailyPnL: 0,
+    dailyPnLPercent: 0,
+    totalPnLPercent: 0,
+    monthlySpending: 0,
+    riskScore: 'Low',
+    accountCount: 0,
+    transactionCount: 0,
+    loading: true
+  }
 
   // Effect hook that recalculates metrics whenever account or transaction data changes
   useEffect(() => {
@@ -83,18 +101,37 @@ export function usePortfolioMetrics(): PortfolioMetrics {
     // In the future, we can add investment accounts, crypto, etc.
     const totalPortfolioValue = totalBankBalance
 
+    // Calculate total P&L percentage (same as daily for now)
+    const totalPnLPercent = dailyPnLPercent
+
+    // Calculate monthly spending from transactions
+    const currentMonth = new Date().getMonth()
+    const currentYear = new Date().getFullYear()
+    const monthlySpending = transactions
+      .filter(t => {
+        const transactionDate = new Date(t.date)
+        return transactionDate.getMonth() === currentMonth && 
+               transactionDate.getFullYear() === currentYear &&
+               t.amount < 0 // Only negative amounts (spending)
+      })
+      .reduce((sum, t) => sum + Math.abs(t.amount), 0)
+
     // Update metrics with calculated values
-    setMetrics({
+    const newMetrics = {
       totalPortfolioValue,
       totalBankBalance,
       dailyPnL,
       dailyPnLPercent,
+      totalPnLPercent,
+      monthlySpending,
       riskScore,
       accountCount,
       transactionCount: transactions.length,
       loading: false
-    })
+    }
+    
+    setMetrics(newMetrics)
   }, [accounts, transactions, accountsLoading, transactionsLoading])
 
-  return metrics
+  return safeMetrics
 }

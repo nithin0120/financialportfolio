@@ -29,92 +29,125 @@ const chartData = [
 export default function TradingPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedStock, setSelectedStock] = useState(marketData[0])
-  const [orderType, setOrderType] = useState<'buy' | 'sell'>('buy')
-  const [shares, setShares] = useState('')
-  const [orderPrice, setOrderPrice] = useState('')
+  const [quantity, setQuantity] = useState(1)
+  const [orderType, setOrderType] = useState('buy')
 
   const filteredStocks = marketData.filter(stock =>
     stock.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
     stock.name.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const handleOrderSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Here you would integrate with your trading API
-    console.log('Order submitted:', {
-      symbol: selectedStock.symbol,
-      type: orderType,
-      shares: parseInt(shares),
-      price: parseFloat(orderPrice)
-    })
+  const handleTrade = () => {
+    const action = orderType === 'buy' ? 'Buy' : 'Sell'
+    const total = selectedStock.price * quantity
+    alert(`${action} order: ${quantity} shares of ${selectedStock.symbol} at $${selectedStock.price} = $${total.toFixed(2)}`)
   }
 
   return (
-    <div className="min-h-screen bg-dark-50 py-8">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div className="pt-16 min-h-screen">
+      <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-dark-900">Trading Dashboard</h1>
-          <p className="mt-2 text-dark-600">
-            Market data and trading execution
+          <h1 className="text-3xl font-bold text-white drop-shadow-lg">Trading Dashboard</h1>
+          <p className="mt-2 text-white opacity-90 drop-shadow-md">
+            Real-time market data and trading interface
           </p>
         </div>
 
+        {/* Market Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 rounded-lg p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-white opacity-90 mb-1">Market Status</p>
+                <p className="text-lg font-bold text-emerald-400">Open</p>
+              </div>
+              <div className="p-3 bg-white bg-opacity-30 rounded-lg">
+                <BarChart3 className="h-6 w-6 text-white" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 rounded-lg p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-white opacity-90 mb-1">S&P 500</p>
+                <p className="text-lg font-bold text-white">4,567.89</p>
+                <p className="text-sm text-emerald-400">+12.34 (+0.27%)</p>
+              </div>
+              <div className="p-3 bg-white bg-opacity-30 rounded-lg">
+                <TrendingUp className="h-6 w-6 text-emerald-400" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 rounded-lg p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-white opacity-90 mb-1">NASDAQ</p>
+                <p className="text-lg font-bold text-white">14,234.56</p>
+                <p className="text-sm text-emerald-400">+45.67 (+0.32%)</p>
+              </div>
+              <div className="p-3 bg-white bg-opacity-30 rounded-lg">
+                <TrendingUp className="h-6 w-6 text-emerald-400" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 rounded-lg p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-white opacity-90 mb-1">DOW</p>
+                <p className="text-lg font-bold text-white">34,567.89</p>
+                <p className="text-sm text-red-400">-23.45 (-0.07%)</p>
+              </div>
+              <div className="p-3 bg-white bg-opacity-30 rounded-lg">
+                <TrendingDown className="h-6 w-6 text-red-400" />
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Market Overview */}
-          <div className="lg:col-span-2">
-            <div className="card">
-              <h3 className="text-lg font-semibold text-dark-900 mb-4">Market Overview</h3>
+          {/* Stock List */}
+          <div className="lg:col-span-1">
+            <div className="bg-white bg-opacity-30 backdrop-blur-md border border-white border-opacity-40 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-white mb-4 drop-shadow-md">Market Watch</h3>
               
               {/* Search */}
               <div className="relative mb-4">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-dark-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white opacity-70" />
                 <input
                   type="text"
                   placeholder="Search stocks..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="input-field pl-10"
+                  className="w-full pl-10 pr-4 py-2 bg-white bg-opacity-20 border border-white border-opacity-30 rounded-lg text-white placeholder-white placeholder-opacity-70 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
                 />
               </div>
 
               {/* Stock List */}
-              <div className="space-y-2">
+              <div className="space-y-2 max-h-96 overflow-y-auto">
                 {filteredStocks.map((stock) => (
                   <div
                     key={stock.symbol}
-                    className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                      selectedStock.symbol === stock.symbol
-                        ? 'border-primary-300 bg-primary-50'
-                        : 'border-dark-200 hover:border-dark-300'
-                    }`}
                     onClick={() => setSelectedStock(stock)}
+                    className={`p-3 rounded-lg cursor-pointer transition-all duration-200 ${
+                      selectedStock.symbol === stock.symbol
+                        ? 'bg-white bg-opacity-30 border border-white border-opacity-50'
+                        : 'bg-white bg-opacity-10 hover:bg-opacity-20 border border-white border-opacity-20'
+                    }`}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-2 h-2 rounded-full bg-dark-400" />
-                          <div>
-                            <p className="font-semibold text-dark-900">{stock.symbol}</p>
-                            <p className="text-sm text-dark-600">{stock.name}</p>
-                          </div>
-                        </div>
+                      <div>
+                        <p className="font-medium text-white">{stock.symbol}</p>
+                        <p className="text-sm text-white opacity-70">{stock.name}</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold text-dark-900">${stock.price}</p>
-                        <div className={`flex items-center space-x-1 text-sm ${
-                          stock.change >= 0 ? 'text-success-600' : 'text-danger-600'
-                        }`}>
-                          {stock.change >= 0 ? (
-                            <TrendingUp className="h-3 w-3" />
-                          ) : (
-                            <TrendingDown className="h-3 w-3" />
-                          )}
-                          <span>
-                            {stock.change >= 0 ? '+' : ''}{stock.change} ({stock.changePercent}%)
-                          </span>
-                        </div>
-                        <p className="text-xs text-dark-500">Vol: {stock.volume}</p>
+                        <p className="font-medium text-white">${stock.price.toFixed(2)}</p>
+                        <p className={`text-sm ${stock.change >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                          {stock.change >= 0 ? '+' : ''}{stock.change.toFixed(2)} ({stock.changePercent >= 0 ? '+' : ''}{stock.changePercent.toFixed(2)}%)
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -123,125 +156,152 @@ export default function TradingPage() {
             </div>
           </div>
 
-          {/* Trading Panel */}
-          <div className="space-y-6">
-            {/* Stock Chart */}
-            <div className="card">
-              <h3 className="text-lg font-semibold text-dark-900 mb-4">
-                {selectedStock.symbol} Chart
-              </h3>
-              <div className="h-48">
-                <ResponsiveContainer width="100%" height="100%">
+          {/* Trading Interface */}
+          <div className="lg:col-span-2">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+              {/* Price Chart */}
+              <div className="bg-white bg-opacity-30 backdrop-blur-md border border-white border-opacity-40 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-white mb-4 drop-shadow-md">
+                  {selectedStock.symbol} - {selectedStock.name}
+                </h3>
+                <ResponsiveContainer width="100%" height={250}>
                   <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                    <XAxis dataKey="time" stroke="#64748b" fontSize={12} />
-                    <YAxis stroke="#64748b" fontSize={12} domain={['dataMin - 1', 'dataMax + 1']} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.2)" />
+                    <XAxis 
+                      dataKey="time" 
+                      stroke="rgba(255, 255, 255, 0.8)"
+                      fontSize={12}
+                    />
+                    <YAxis 
+                      stroke="rgba(255, 255, 255, 0.8)"
+                      fontSize={12}
+                      tickFormatter={(value) => `$${value}`}
+                    />
                     <Tooltip 
                       contentStyle={{
-                        backgroundColor: 'white',
-                        border: '1px solid #e2e8f0',
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
                         borderRadius: '8px',
+                        color: 'white'
                       }}
                       formatter={(value: number) => [`$${value.toFixed(2)}`, 'Price']}
                     />
-                    <Line type="monotone" dataKey="price" stroke="#0ea5e9" strokeWidth={2} />
+                    <Line 
+                      type="monotone" 
+                      dataKey="price" 
+                      stroke="#0ea5e9" 
+                      strokeWidth={2} 
+                      dot={false}
+                    />
                   </LineChart>
                 </ResponsiveContainer>
+                
+                <div className="mt-4 grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-white opacity-70">Current Price</p>
+                    <p className="text-xl font-bold text-white">${selectedStock.price.toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-white opacity-70">Change</p>
+                    <p className={`text-xl font-bold ${selectedStock.change >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {selectedStock.change >= 0 ? '+' : ''}{selectedStock.change.toFixed(2)} ({selectedStock.changePercent >= 0 ? '+' : ''}{selectedStock.changePercent.toFixed(2)}%)
+                    </p>
+                  </div>
+                </div>
               </div>
-            </div>
 
-            {/* Trading Form */}
-            <div className="card">
-              <h3 className="text-lg font-semibold text-dark-900 mb-4">Place Order</h3>
-              
-              <form onSubmit={handleOrderSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-dark-700 mb-2">
-                    Stock
-                  </label>
-                  <div className="p-3 bg-dark-50 rounded-lg border border-dark-200">
-                    <p className="font-semibold text-dark-900">{selectedStock.symbol}</p>
-                    <p className="text-sm text-dark-600">{selectedStock.name}</p>
-                    <p className="text-lg font-bold text-dark-900">${selectedStock.price}</p>
+              {/* Trading Panel */}
+              <div className="bg-white bg-opacity-30 backdrop-blur-md border border-white border-opacity-40 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-white mb-4 drop-shadow-md">Place Order</h3>
+                
+                <div className="space-y-4">
+                  {/* Order Type */}
+                  <div>
+                    <label className="block text-sm font-medium text-white opacity-90 mb-2">Order Type</label>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => setOrderType('buy')}
+                        className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all duration-200 ${
+                          orderType === 'buy'
+                            ? 'bg-emerald-500 text-white'
+                            : 'bg-white bg-opacity-20 text-white border border-white border-opacity-30'
+                        }`}
+                      >
+                        Buy
+                      </button>
+                      <button
+                        onClick={() => setOrderType('sell')}
+                        className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all duration-200 ${
+                          orderType === 'sell'
+                            ? 'bg-red-500 text-white'
+                            : 'bg-white bg-opacity-20 text-white border border-white border-opacity-30'
+                        }`}
+                      >
+                        Sell
+                      </button>
+                    </div>
                   </div>
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-dark-700 mb-2">
-                    Order Type
-                  </label>
-                  <div className="flex space-x-2">
-                    <button
-                      type="button"
-                      onClick={() => setOrderType('buy')}
-                      className={`flex-1 py-2 px-4 rounded-lg border font-medium transition-colors ${
-                        orderType === 'buy'
-                          ? 'border-success-300 bg-success-50 text-success-700'
-                          : 'border-dark-300 text-dark-700 hover:bg-dark-50'
-                      }`}
-                    >
-                      <Plus className="h-4 w-4 inline mr-2" />
-                      Buy
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setOrderType('sell')}
-                      className={`flex-1 py-2 px-4 rounded-lg border font-medium transition-colors ${
-                        orderType === 'sell'
-                          ? 'border-danger-300 bg-danger-50 text-danger-700'
-                          : 'border-dark-300 text-dark-700 hover:bg-dark-50'
-                      }`}
-                    >
-                      <Minus className="h-4 w-4 inline mr-2" />
-                      Sell
-                    </button>
+                  {/* Quantity */}
+                  <div>
+                    <label className="block text-sm font-medium text-white opacity-90 mb-2">Quantity</label>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                        className="p-2 bg-white bg-opacity-20 border border-white border-opacity-30 rounded-lg text-white hover:bg-opacity-30 transition-all duration-200"
+                      >
+                        <Minus className="h-4 w-4" />
+                      </button>
+                      <input
+                        type="number"
+                        value={quantity}
+                        onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                        className="flex-1 py-2 px-3 bg-white bg-opacity-20 border border-white border-opacity-30 rounded-lg text-white text-center focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+                      />
+                      <button
+                        onClick={() => setQuantity(quantity + 1)}
+                        className="p-2 bg-white bg-opacity-20 border border-white border-opacity-30 rounded-lg text-white hover:bg-opacity-30 transition-all duration-200"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
-                </div>
 
-                <div>
-                  <label htmlFor="shares" className="block text-sm font-medium text-dark-700 mb-2">
-                    Number of Shares
-                  </label>
-                  <input
-                    id="shares"
-                    type="number"
-                    min="1"
-                    value={shares}
-                    onChange={(e) => setShares(e.target.value)}
-                    className="input-field"
-                    placeholder="Enter number of shares"
-                    required
-                  />
-                </div>
+                  {/* Order Summary */}
+                  <div className="bg-white bg-opacity-10 rounded-lg p-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-white opacity-90">Total Value</span>
+                      <span className="text-white font-medium">
+                        ${(selectedStock.price * quantity).toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-white opacity-90">Commission</span>
+                      <span className="text-white font-medium">$0.00</span>
+                    </div>
+                    <div className="border-t border-white border-opacity-20 mt-2 pt-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-white font-medium">Total Cost</span>
+                        <span className="text-white font-bold">
+                          ${(selectedStock.price * quantity).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
 
-                <div>
-                  <label htmlFor="price" className="block text-sm font-medium text-dark-700 mb-2">
-                    Order Price
-                  </label>
-                  <input
-                    id="price"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={orderPrice}
-                    onChange={(e) => setOrderPrice(e.target.value)}
-                    className="input-field"
-                    placeholder="Enter order price"
-                    required
-                  />
+                  {/* Place Order Button */}
+                  <button
+                    onClick={handleTrade}
+                    className={`w-full py-3 px-4 rounded-lg font-medium text-white transition-all duration-200 ${
+                      orderType === 'buy'
+                        ? 'bg-emerald-500 hover:bg-emerald-600'
+                        : 'bg-red-500 hover:bg-red-600'
+                    }`}
+                  >
+                    {orderType === 'buy' ? 'Buy' : 'Sell'} {quantity} Share{quantity > 1 ? 's' : ''} of {selectedStock.symbol}
+                  </button>
                 </div>
-
-                <button
-                  type="submit"
-                  className={`w-full py-3 px-4 rounded-lg font-medium text-white transition-colors ${
-                    orderType === 'buy'
-                      ? 'bg-success-600 hover:bg-success-700'
-                      : 'bg-danger-600 hover:bg-danger-700'
-                  }`}
-                >
-                  {orderType === 'buy' ? 'Buy' : 'Sell'} {selectedStock.symbol}
-                </button>
-              </form>
+              </div>
             </div>
           </div>
         </div>
@@ -249,4 +309,3 @@ export default function TradingPage() {
     </div>
   )
 }
-

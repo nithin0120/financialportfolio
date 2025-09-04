@@ -291,19 +291,19 @@ export default function ReportsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-dark-50 py-8">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div className="pt-16 min-h-screen">
+      <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-dark-900">Financial Reports</h1>
-              <p className="mt-2 text-dark-600">
+              <h1 className="text-3xl font-bold text-white drop-shadow-lg">Financial Reports</h1>
+              <p className="mt-2 text-white opacity-90 drop-shadow-md">
                 Generate, view, and download financial reports
               </p>
             </div>
             <div className="flex items-center space-x-3">
-              <button className="btn-primary flex items-center space-x-2">
+              <button className="bg-white/20 hover:bg-white/30 border border-white/30 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 backdrop-blur-sm flex items-center space-x-2">
                 <Calendar className="h-4 w-4" />
                 <span>Schedule Report</span>
               </button>
@@ -312,31 +312,31 @@ export default function ReportsPage() {
         </div>
 
         {/* Filters */}
-        <div className="card mb-8">
+        <div className="bg-white/20 backdrop-blur-xl border border-white/30 rounded-2xl p-6 shadow-2xl mb-8">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
-              <label className="block text-sm font-medium text-dark-700 mb-2">
+              <label className="block text-sm font-medium text-white/90 mb-2">
                 Search Reports
               </label>
               <div className="relative">
-                <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-dark-400" />
+                <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/60" />
                 <input
                   type="text"
                   placeholder="Search by report name or description..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="input-field pl-10"
+                  className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-transparent transition-all duration-200 backdrop-blur-sm"
                 />
               </div>
             </div>
             <div className="sm:w-48">
-              <label className="block text-sm font-medium text-dark-700 mb-2">
+              <label className="block text-sm font-medium text-white/90 mb-2">
                 Report Type
               </label>
               <select
                 value={selectedType}
                 onChange={(e) => setSelectedType(e.target.value)}
-                className="input-field"
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-transparent transition-all duration-200 backdrop-blur-sm"
               >
                 <option value="all">All Types</option>
                 <option value="monthly-statement">Monthly Statement</option>
@@ -352,33 +352,33 @@ export default function ReportsPage() {
 
         {/* Data Summary */}
         <div className="mb-8">
-          <div className="card">
-            <h2 className="text-xl font-semibold text-dark-900 mb-4">Financial Data Summary</h2>
+          <div className="bg-white/20 backdrop-blur-xl border border-white/30 rounded-2xl p-6 shadow-2xl">
+            <h2 className="text-xl font-semibold text-white drop-shadow-lg mb-4">Financial Data Summary</h2>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="text-center p-4 bg-dark-50 rounded-lg">
-                <div className="text-2xl font-bold text-primary-600">
+              <div className="text-center p-4 bg-white/10 rounded-lg border border-white/20">
+                <div className="text-2xl font-bold text-blue-400">
                   {accountsLoading ? '...' : accounts.length}
                 </div>
-                <div className="text-sm text-dark-600">Connected Accounts</div>
+                <div className="text-sm text-white/80">Connected Accounts</div>
               </div>
-              <div className="text-center p-4 bg-dark-50 rounded-lg">
-                <div className="text-2xl font-bold text-success-600">
+              <div className="text-center p-4 bg-white/10 rounded-lg border border-white/20">
+                <div className="text-2xl font-bold text-green-400">
                   {portfolioLoading ? '...' : `$${portfolioMetrics?.totalPortfolioValue?.toLocaleString() || '0'}`}
                 </div>
-                <div className="text-sm text-dark-600">Total Portfolio Value</div>
+                <div className="text-sm text-white/80">Total Portfolio Value</div>
               </div>
-              <div className="text-center p-4 bg-dark-50 rounded-lg">
-                <div className="text-2xl font-bold text-warning-600">
+              <div className="text-center p-4 bg-white/10 rounded-lg border border-white/20">
+                <div className="text-2xl font-bold text-yellow-400">
                   {transactionsLoading ? '...' : transactions.length}
                 </div>
-                <div className="text-sm text-dark-600">Total Transactions</div>
+                <div className="text-sm text-white/80">Total Transactions</div>
               </div>
-              <div className="text-center p-4 bg-dark-50 rounded-lg">
-                <div className="text-2xl font-bold text-info-600">
+              <div className="text-center p-4 bg-white/10 rounded-lg border border-white/20">
+                <div className="text-2xl font-bold text-purple-400">
                   {accountsLoading || transactionsLoading ? '...' : 
                    accounts.length > 0 && transactions.length > 0 ? 'Ready' : 'Pending'}
                 </div>
-                <div className="text-sm text-dark-600">Report Status</div>
+                <div className="text-sm text-white/80">Report Status</div>
               </div>
             </div>
           </div>
@@ -386,23 +386,23 @@ export default function ReportsPage() {
 
         {/* Available Reports */}
         <div className="mb-8">
-          <h2 className="text-xl font-semibold text-dark-900 mb-4">Available Reports</h2>
+          <h2 className="text-xl font-semibold text-white drop-shadow-lg mb-4">Available Reports</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredReports.map((report) => (
-              <div key={report.id} className="card card-hover">
+              <div key={report.id} className="bg-white/20 backdrop-blur-xl border border-white/30 rounded-2xl p-6 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:transform hover:-translate-y-1">
                 <div className="flex items-start justify-between mb-4">
-                  <div className="p-3 rounded-lg bg-primary-100 text-primary-600">
+                  <div className="p-3 rounded-lg bg-white/20 text-white">
                     <report.icon className="h-6 w-6" />
                   </div>
-                  <span className="text-xs font-medium px-2 py-1 bg-dark-100 text-dark-700 rounded-full">
+                  <span className="text-xs font-medium px-2 py-1 bg-white/20 text-white rounded-full">
                     {report.format}
                   </span>
                 </div>
                 
-                <h3 className="text-lg font-semibold text-dark-900 mb-2">{report.name}</h3>
-                <p className="text-dark-600 text-sm mb-4">{report.description}</p>
+                <h3 className="text-lg font-semibold text-white mb-2 drop-shadow-md">{report.name}</h3>
+                <p className="text-white/80 text-sm mb-4">{report.description}</p>
                 
-                <div className="text-xs text-dark-500 mb-4">
+                <div className="text-xs text-white/60 mb-4">
                   Last generated: {report.lastGenerated}
                 </div>
                 
@@ -410,13 +410,13 @@ export default function ReportsPage() {
                 <div className="mb-4">
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                     report.status === 'ready' 
-                      ? 'bg-success-100 text-success-800' 
-                      : 'bg-warning-100 text-warning-800'
+                      ? 'bg-green-500/20 text-green-300 border border-green-400/30' 
+                      : 'bg-yellow-500/20 text-yellow-300 border border-yellow-400/30'
                   }`}>
                     {report.status === 'ready' ? 'Ready to Generate' : 'Pending Data'}
                   </span>
                   {(report as any).metadata && (
-                    <div className="text-xs text-dark-500 mt-1">
+                    <div className="text-xs text-white/60 mt-1">
                       {(report as any).metadata.totalAccounts} accounts • ${(report as any).metadata.totalBalance.toLocaleString()} balance
                     </div>
                   )}
@@ -426,10 +426,10 @@ export default function ReportsPage() {
                   <button
                     onClick={() => handleGenerateReport(report.id)}
                     disabled={generatingReports.has(report.id) || report.status === 'pending'}
-                    className={`flex-1 flex items-center justify-center space-x-2 py-2 ${
+                    className={`flex-1 flex items-center justify-center space-x-2 py-2 px-4 rounded-lg transition-all duration-200 backdrop-blur-sm ${
                       generatingReports.has(report.id) || report.status === 'pending'
-                        ? 'btn-disabled cursor-not-allowed'
-                        : 'btn-primary'
+                        ? 'bg-white/10 text-white/50 cursor-not-allowed border border-white/10'
+                        : 'bg-white/20 hover:bg-white/30 border border-white/30 text-white font-semibold'
                     }`}
                   >
                     {generatingReports.has(report.id) ? (
@@ -446,7 +446,7 @@ export default function ReportsPage() {
                   </button>
                   <button
                     onClick={() => handleDownloadReport(report.id)}
-                    className="btn-secondary p-2"
+                    className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold p-2 rounded-lg transition-all duration-200 backdrop-blur-sm"
                     title="Download"
                   >
                     <Download className="h-4 w-4" />

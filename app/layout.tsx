@@ -19,11 +19,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={inter.className} suppressHydrationWarning={true}>
         <AuthProvider>
-          <div className="min-h-screen bg-dark-50 flex">
+          <div className="min-h-screen">
             <NavigationMenu />
-            <main className="flex-1 lg:ml-0">
+            <main className="lg:ml-64">
               {children}
             </main>
           </div>

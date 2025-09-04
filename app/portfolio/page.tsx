@@ -28,74 +28,49 @@ const fallbackPerformanceData = [
   { month: 'Apr', return: 0, benchmark: 0.8 },
   { month: 'May', return: 0, benchmark: 0.4 },
   { month: 'Jun', return: 0, benchmark: 0.6 },
-  { month: 'Jul', return: 0, benchmark: 0.2 },
-  { month: 'Aug', return: 0, benchmark: 0.7 },
-  { month: 'Sep', return: 0, benchmark: 0.3 },
-  { month: 'Oct', return: 0, benchmark: -0.1 },
-  { month: 'Nov', return: 0, benchmark: 0.9 },
-  { month: 'Dec', return: 0, benchmark: 0.4 },
-]
-
-const portfolioColumns = [
-  { key: 'symbol', label: 'Symbol', sortable: true },
-  { key: 'name', label: 'Company Name', sortable: true },
-  { key: 'shares', label: 'Shares', sortable: true },
-  { key: 'avgPrice', label: 'Avg Price', sortable: true, render: (value: number) => `$${value.toFixed(2)}` },
-  { key: 'currentPrice', label: 'Current Price', sortable: true, render: (value: number) => `$${value.toFixed(2)}` },
-  { key: 'marketValue', label: 'Market Value', sortable: true, render: (value: number) => `$${value.toLocaleString()}` },
-  { key: 'pnl', label: 'P&L', sortable: true, render: (value: number) => (
-    <span className={value >= 0 ? 'text-success-600' : 'text-danger-600'}>
-      {value >= 0 ? '+' : ''}${value.toFixed(2)}
-    </span>
-  )},
-  { key: 'pnlPercent', label: 'P&L %', sortable: true, render: (value: number) => (
-    <span className={value >= 0 ? 'text-success-600' : 'text-danger-600'}>
-      {value >= 0 ? '+' : ''}{value.toFixed(2)}%
-    </span>
-  )},
 ]
 
 export default function PortfolioPage() {
-  const [selectedTimeframe, setSelectedTimeframe] = useState('1Y')
-  const [showBankConnection, setShowBankConnection] = useState(false)
   const [isClient, setIsClient] = useState(false)
+  const [showBankConnection, setShowBankConnection] = useState(false)
   
-  const { accounts, loading: accountsLoading, error: accountsError, refetch: refetchAccounts, syncTransactions } = useAccounts()
-  const { transactions, loading: transactionsLoading, error: transactionsError } = useTransactions()
+  const { accounts, loading: accountsLoading, error: accountsError, refetch: refetchAccounts } = useAccounts()
+  const { transactions, loading: transactionsLoading, error: transactionsError, syncTransactions } = useTransactions()
 
-  // Prevent hydration mismatch by only rendering on client
   useEffect(() => {
     setIsClient(true)
   }, [])
 
-  // Calculate dynamic portfolio data based on real account and transaction data
+  // Calculate dynamic portfolio data from real accounts and transactions
   const portfolioData = useMemo(() => {
-    const totalBankBalance = accounts.reduce((sum, account) => sum + account.balance, 0)
-    
-    // Create holdings data from bank accounts (treating each account as a "holding")
-    const holdingsData = accounts.length > 0 ? accounts.map((account, index) => {
-      // Simulate some growth for demonstration (in real app, you'd get this from market data)
-      const simulatedGrowth = 1 + (Math.random() * 0.1 - 0.05) // ±5% random growth
-      const currentValue = account.balance * simulatedGrowth
-      const pnl = currentValue - account.balance
-      const pnlPercent = account.balance > 0 ? (pnl / account.balance) * 100 : 0
-      
+    if (!isClient) {
       return {
-        symbol: account.type?.toUpperCase() || 'CASH',
-        name: `${account.institution_name} ${account.name}`,
-        shares: 1,
-        avgPrice: account.balance,
-        currentPrice: currentValue,
-        marketValue: currentValue,
-        pnl: pnl,
-        pnlPercent: pnlPercent
+        holdingsData: fallbackHoldingsData,
+        assetAllocationData: fallbackAssetAllocationData,
+        performanceData: fallbackPerformanceData,
+        totalValue: 0,
+        totalPnL: 0,
+        totalPnLPercent: 0,
+        totalBankBalance: 0
       }
-    }) : fallbackHoldingsData
+    }
 
-    // Calculate asset allocation based on account types
+    // Calculate holdings data from accounts
+    const holdingsData = accounts.length > 0 ? accounts.map(account => ({
+      symbol: account.type.toUpperCase(),
+      name: `${account.name} (${account.type})`,
+      shares: 1,
+      avgPrice: account.balance,
+      currentPrice: account.balance,
+      marketValue: account.balance,
+      pnl: 0,
+      pnlPercent: 0
+    })) : fallbackHoldingsData
+
+    // Calculate asset allocation from account types
     const assetAllocationData = accounts.length > 0 ? (() => {
       const typeGroups = accounts.reduce((groups, account) => {
-        const type = account.type || 'checking'
+        const type = account.type || 'other'
         if (!groups[type]) {
           groups[type] = { total: 0, count: 0 }
         }
@@ -127,7 +102,7 @@ export default function PortfolioPage() {
         })
         
         const monthlyNetFlow = monthTransactions.reduce((sum, t) => sum + t.amount, 0)
-        const monthlyReturn = totalBankBalance > 0 ? (monthlyNetFlow / totalBankBalance) * 100 : 0
+        const monthlyReturn = monthlyNetFlow > 0 ? (monthlyNetFlow / 10000) * 0.1 : 0 // Simulate return based on activity
         
         // Simulate benchmark return (in real app, you'd get this from market data)
         const benchmarkReturn = 0.3 + (Math.random() * 0.4 - 0.2) // 0.1% to 0.5% range
@@ -140,9 +115,10 @@ export default function PortfolioPage() {
       })
     })() : fallbackPerformanceData
 
-    const totalValue = holdingsData.reduce((sum, holding) => sum + holding.marketValue, 0)
-    const totalPnL = holdingsData.reduce((sum, holding) => sum + holding.pnl, 0)
-    const totalPnLPercent = totalValue > 0 ? (totalPnL / (totalValue - totalPnL)) * 100 : 0
+    const totalValue = accounts.reduce((sum, account) => sum + account.balance, 0)
+    const totalPnL = 0 // In a real app, you'd calculate this from historical data
+    const totalPnLPercent = totalValue > 0 ? (totalPnL / totalValue) * 100 : 0
+    const totalBankBalance = totalValue
 
     return {
       holdingsData,
@@ -153,7 +129,7 @@ export default function PortfolioPage() {
       totalPnLPercent,
       totalBankBalance
     }
-  }, [accounts, transactions])
+  }, [accounts, transactions, isClient])
 
   const { holdingsData, assetAllocationData, performanceData, totalValue, totalPnL, totalPnLPercent, totalBankBalance } = portfolioData
 
@@ -169,17 +145,11 @@ export default function PortfolioPage() {
   // Prevent static rendering issues by not rendering until client-side
   if (!isClient) {
     return (
-      <div className="min-h-screen bg-dark-50 py-8">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="pt-16 min-h-screen">
+        <div className="max-w-7xl mx-auto px-6 py-8">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-dark-900">Portfolio Overview</h1>
-            <p className="mt-2 text-dark-600">
-              Track your investments and performance
-            </p>
-          </div>
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-            <p className="mt-2 text-dark-600">Loading portfolio...</p>
+            <h1 className="text-3xl font-bold text-white drop-shadow-lg">Portfolio Overview</h1>
+            <p className="mt-2 text-white opacity-90 drop-shadow-md">Loading portfolio data...</p>
           </div>
         </div>
       </div>
@@ -187,12 +157,12 @@ export default function PortfolioPage() {
   }
 
   return (
-    <div className="min-h-screen bg-dark-50 py-8">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div className="pt-16 min-h-screen">
+      <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-dark-900">Portfolio Overview</h1>
-          <p className="mt-2 text-dark-600">
+          <h1 className="text-3xl font-bold text-white drop-shadow-lg">Portfolio Overview</h1>
+          <p className="mt-2 text-white opacity-90 drop-shadow-md">
             Track your investments and performance
           </p>
         </div>
@@ -200,19 +170,19 @@ export default function PortfolioPage() {
         {/* Bank Accounts Section */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-dark-900">Connected Bank Accounts</h2>
+            <h2 className="text-2xl font-bold text-white drop-shadow-lg">Connected Bank Accounts</h2>
             <div className="flex space-x-3">
               <button
                 onClick={handleSyncTransactions}
                 disabled={accountsLoading}
-                className="btn-secondary flex items-center space-x-2"
+                className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 rounded-lg px-4 py-2 text-white hover:bg-opacity-30 transition-all duration-200 flex items-center space-x-2"
               >
                 <RefreshCw className={`h-4 w-4 ${accountsLoading ? 'animate-spin' : ''}`} />
                 <span>Sync Transactions</span>
               </button>
               <button
                 onClick={() => setShowBankConnection(!showBankConnection)}
-                className="btn-primary flex items-center space-x-2"
+                className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 rounded-lg px-4 py-2 text-white hover:bg-opacity-30 transition-all duration-200 flex items-center space-x-2"
               >
                 <CreditCard className="h-4 w-4" />
                 <span>{showBankConnection ? 'Hide' : 'Connect Bank'}</span>
@@ -230,143 +200,105 @@ export default function PortfolioPage() {
           )}
 
           {accountsLoading ? (
-            <div className="card text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-              <p className="mt-2 text-dark-600">Loading accounts...</p>
+            <div className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 rounded-lg p-8 text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto"></div>
+              <p className="mt-2 text-white opacity-90">Loading accounts...</p>
             </div>
           ) : accountsError ? (
-            <div className="card text-center py-8">
-              <p className="text-danger-600">Error loading accounts: {accountsError}</p>
+            <div className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 rounded-lg p-8 text-center">
+              <p className="text-red-400">Error loading accounts: {accountsError}</p>
             </div>
           ) : accounts.length === 0 ? (
-            <div className="card text-center py-8">
-              <CreditCard className="h-12 w-12 text-dark-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-dark-900 mb-2">No Bank Accounts Connected</h3>
-              <p className="text-dark-600 mb-4">Connect your bank accounts to view transactions and balances</p>
+            <div className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 rounded-lg p-8 text-center">
+              <CreditCard className="h-12 w-12 text-white opacity-60 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-white mb-2">No Bank Accounts Connected</h3>
+              <p className="text-white opacity-90 mb-4">Connect your bank accounts to view transactions and balances</p>
               <button
                 onClick={() => setShowBankConnection(true)}
-                className="btn-primary"
+                className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 rounded-lg px-4 py-2 text-white hover:bg-opacity-30 transition-all duration-200"
               >
-                Connect Your First Bank Account
+                Connect Bank Account
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {accounts.map((account) => (
-                <div key={account.id} className="card">
-                  <div className="flex items-center justify-between mb-3">
+                <div key={account.id} className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 rounded-lg p-6">
+                  <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-3">
-                      <div className="p-2 rounded-full bg-primary-100 text-primary-600">
-                        <CreditCard className="h-5 w-5" />
+                      <div className="p-2 bg-white bg-opacity-30 rounded-lg">
+                        <CreditCard className="h-5 w-5 text-white" />
                       </div>
                       <div>
-                        <h3 className="font-medium text-dark-900">{account.name}</h3>
-                        <p className="text-sm text-dark-600">
-                          {account.type} •••• {account.mask}
-                        </p>
+                        <h3 className="font-medium text-white">{account.name}</h3>
+                        <p className="text-sm text-white opacity-70">{account.type}</p>
                       </div>
                     </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-dark-600">Balance</p>
-                      <p className="text-lg font-semibold text-dark-900">
-                        ${account.balance.toLocaleString()}
-                      </p>
-                    </div>
                     <div className="text-right">
-                      <p className="text-sm text-dark-600">{account.subtype}</p>
-                      <p className="text-xs text-dark-500">{account.institution_name}</p>
+                      <p className="text-lg font-semibold text-white">${account.balance.toLocaleString()}</p>
+                      <p className="text-sm text-white opacity-70">Available</p>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
           )}
-
-          {accounts.length > 0 && (
-            <div className="mt-4 card">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-dark-600">Total Bank Balance</p>
-                  <p className="text-2xl font-bold text-dark-900">
-                    ${totalBankBalance.toLocaleString()}
-                  </p>
-                </div>
-                <div className="p-3 rounded-full bg-primary-100 text-primary-600">
-                  <DollarSign className="h-6 w-6" />
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* Portfolio Summary Cards */}
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-          <div className="card">
+        {/* Portfolio Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 rounded-lg p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-dark-600">Total Portfolio Value</p>
-                <p className="text-2xl font-bold text-dark-900">
-                  {accountsLoading ? 'Loading...' : `$${totalValue.toLocaleString()}`}
-                </p>
-                <p className="text-xs text-dark-500 mt-1">
-                  {accounts.length > 0 ? `${accounts.length} accounts` : 'No accounts connected'}
-                </p>
+                <p className="text-sm font-medium text-white opacity-90 mb-1">Total Value</p>
+                <p className="text-2xl font-bold text-white">${totalValue.toLocaleString()}</p>
               </div>
-              <div className="p-3 rounded-full bg-primary-100 text-primary-600">
-                <DollarSign className="h-6 w-6" />
+              <div className="p-3 bg-white bg-opacity-30 rounded-lg">
+                <DollarSign className="h-6 w-6 text-white" />
               </div>
             </div>
           </div>
 
-          <div className="card">
+          <div className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 rounded-lg p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-dark-600">Total P&L</p>
-                <p className={`text-2xl font-bold ${totalPnL >= 0 ? 'text-success-600' : 'text-danger-600'}`}>
-                  {accountsLoading ? 'Loading...' : `${totalPnL >= 0 ? '+' : ''}$${totalPnL.toFixed(2)}`}
-                </p>
-                <p className="text-xs text-dark-500 mt-1">
-                  {accounts.length > 0 ? 'Simulated growth' : 'Connect accounts to see P&L'}
+                <p className="text-sm font-medium text-white opacity-90 mb-1">Total P&L</p>
+                <p className={`text-2xl font-bold ${totalPnL >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  ${totalPnL.toLocaleString()}
                 </p>
               </div>
-              <div className={`p-3 rounded-full ${totalPnL >= 0 ? 'bg-success-100 text-success-600' : 'bg-danger-100 text-danger-600'}`}>
-                {totalPnL >= 0 ? <TrendingUp className="h-6 w-6" /> : <TrendingDown className="h-6 w-6" />}
+              <div className="p-3 bg-white bg-opacity-30 rounded-lg">
+                {totalPnL >= 0 ? (
+                  <TrendingUp className="h-6 w-6 text-emerald-400" />
+                ) : (
+                  <TrendingDown className="h-6 w-6 text-red-400" />
+                )}
               </div>
             </div>
           </div>
 
-          <div className="card">
+          <div className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 rounded-lg p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-dark-600">P&L %</p>
-                <p className={`text-2xl font-bold ${totalPnLPercent >= 0 ? 'text-success-600' : 'text-danger-600'}`}>
-                  {accountsLoading ? 'Loading...' : `${totalPnLPercent >= 0 ? '+' : ''}${totalPnLPercent.toFixed(2)}%`}
-                </p>
-                <p className="text-xs text-dark-500 mt-1">
-                  {accounts.length > 0 ? 'Based on account balances' : 'No data available'}
+                <p className="text-sm font-medium text-white opacity-90 mb-1">P&L %</p>
+                <p className={`text-2xl font-bold ${totalPnLPercent >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {totalPnLPercent >= 0 ? '+' : ''}{totalPnLPercent.toFixed(2)}%
                 </p>
               </div>
-              <div className="p-3 rounded-full bg-dark-100 text-dark-600">
-                <Percent className="h-6 w-6" />
+              <div className="p-3 bg-white bg-opacity-30 rounded-lg">
+                <Percent className="h-6 w-6 text-white" />
               </div>
             </div>
           </div>
 
-          <div className="card">
+          <div className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 rounded-lg p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-dark-600">Account Holdings</p>
-                <p className="text-2xl font-bold text-dark-900">
-                  {accountsLoading ? 'Loading...' : holdingsData.length}
-                </p>
-                <p className="text-xs text-dark-500 mt-1">
-                  {accounts.length > 0 ? 'Connected accounts' : 'No holdings'}
-                </p>
+                <p className="text-sm font-medium text-white opacity-90 mb-1">Bank Balance</p>
+                <p className="text-2xl font-bold text-white">${totalBankBalance.toLocaleString()}</p>
               </div>
-              <div className="p-3 rounded-full bg-dark-100 text-dark-600">
-                <TrendingUp className="h-6 w-6" />
+              <div className="p-3 bg-white bg-opacity-30 rounded-lg">
+                <CreditCard className="h-6 w-6 text-white" />
               </div>
             </div>
           </div>
@@ -375,163 +307,140 @@ export default function PortfolioPage() {
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {/* Asset Allocation */}
-          <div className="card">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-dark-900">Asset Allocation</h3>
-              <div className="text-sm text-dark-500">
-                {accounts.length > 0 ? `${accounts.length} accounts` : 'No data'}
-              </div>
-            </div>
-            <div className="h-64">
-              {accountsLoading ? (
-                <div className="w-full h-full flex items-center justify-center">
-                  <div className="text-dark-500">Loading asset allocation...</div>
-                </div>
-              ) : accounts.length === 0 ? (
-                <div className="w-full h-full flex items-center justify-center">
-                  <div className="text-center text-dark-500">
-                    <CreditCard className="h-12 w-12 mx-auto mb-2 text-dark-400" />
-                    <p className="text-sm">Connect bank accounts to see asset allocation</p>
-                  </div>
-                </div>
-              ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={assetAllocationData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {assetAllocationData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      contentStyle={{
-                        backgroundColor: 'white',
-                        border: '1px solid #e2e8f0',
-                        borderRadius: '8px',
-                      }}
-                      formatter={(value: number) => [`${value.toFixed(1)}%`, 'Allocation']}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              )}
-            </div>
-            {accounts.length > 0 && (
-              <div className="mt-4 text-xs text-dark-500">
-                <p>Asset allocation based on account types and balances</p>
-              </div>
-            )}
+          <div className="bg-white bg-opacity-30 backdrop-blur-md border border-white border-opacity-40 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-white mb-4 drop-shadow-md">Asset Allocation</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={assetAllocationData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {assetAllocationData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  formatter={(value: number) => [`${value.toFixed(1)}%`, 'Allocation']}
+                  contentStyle={{
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '8px',
+                    color: 'white'
+                  }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
           </div>
 
           {/* Performance vs Benchmark */}
-          <div className="card">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-dark-900">Performance vs Benchmark</h3>
-              <select
-                value={selectedTimeframe}
-                onChange={(e) => setSelectedTimeframe(e.target.value)}
-                className="input-field w-24"
-              >
-                <option value="1M">1M</option>
-                <option value="3M">3M</option>
-                <option value="6M">6M</option>
-                <option value="1Y">1Y</option>
-              </select>
-            </div>
-            <div className="h-64">
-              {accountsLoading || transactionsLoading ? (
-                <div className="w-full h-full flex items-center justify-center">
-                  <div className="text-dark-500">Loading performance data...</div>
-                </div>
-              ) : accounts.length === 0 ? (
-                <div className="w-full h-full flex items-center justify-center">
-                  <div className="text-center text-dark-500">
-                    <TrendingUp className="h-12 w-12 mx-auto mb-2 text-dark-400" />
-                    <p className="text-sm">Connect accounts to see performance</p>
-                  </div>
-                </div>
-              ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={performanceData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                    <XAxis dataKey="month" stroke="#64748b" fontSize={12} />
-                    <YAxis stroke="#64748b" fontSize={12} tickFormatter={(value) => `${value}%`} />
-                    <Tooltip 
-                      contentStyle={{
-                        backgroundColor: 'white',
-                        border: '1px solid #e2e8f0',
-                        borderRadius: '8px',
-                      }}
-                      formatter={(value: number, name: string) => [
-                        `${value}%`, 
-                        name === 'return' ? 'Portfolio' : 'Benchmark'
-                      ]}
-                    />
-                    <Bar dataKey="return" fill="#0ea5e9" name="Portfolio" />
-                    <Bar dataKey="benchmark" fill="#64748b" name="Benchmark" />
-                  </BarChart>
-                </ResponsiveContainer>
-              )}
-            </div>
-            {accounts.length > 0 && (
-              <div className="mt-4 text-xs text-dark-500">
-                <p>Performance based on transaction activity vs simulated benchmark</p>
-              </div>
-            )}
+          <div className="bg-white bg-opacity-30 backdrop-blur-md border border-white border-opacity-40 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-white mb-4 drop-shadow-md">Performance vs Benchmark</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={performanceData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.2)" />
+                <XAxis 
+                  dataKey="month" 
+                  stroke="rgba(255, 255, 255, 0.8)"
+                  fontSize={12}
+                />
+                <YAxis 
+                  stroke="rgba(255, 255, 255, 0.8)"
+                  fontSize={12}
+                  tickFormatter={(value) => `${value}%`}
+                />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '8px',
+                    color: 'white'
+                  }}
+                  formatter={(value: number) => [`${value}%`, 'Return']}
+                />
+                <Bar dataKey="return" fill="#0ea5e9" name="Portfolio" />
+                <Bar dataKey="benchmark" fill="#64748b" name="Benchmark" />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Holdings Table */}
-        <div className="card">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-dark-900">Portfolio Holdings</h3>
-            <div className="text-sm text-dark-500">
-              {accountsLoading ? 'Loading...' : `${holdingsData.length} holdings`}
-            </div>
+        {/* Portfolio Holdings */}
+        <div className="bg-white bg-opacity-30 backdrop-blur-md border border-white border-opacity-40 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-white mb-4 drop-shadow-md">Portfolio Holdings</h3>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-white divide-opacity-20">
+              <thead>
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-white text-opacity-80 uppercase tracking-wider">
+                    Symbol
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-white text-opacity-80 uppercase tracking-wider">
+                    Name
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-white text-opacity-80 uppercase tracking-wider">
+                    Shares
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-white text-opacity-80 uppercase tracking-wider">
+                    Avg Price
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-white text-opacity-80 uppercase tracking-wider">
+                    Current Price
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-white text-opacity-80 uppercase tracking-wider">
+                    Market Value
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-white text-opacity-80 uppercase tracking-wider">
+                    P&L
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-white text-opacity-80 uppercase tracking-wider">
+                    P&L %
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white divide-opacity-20">
+                {holdingsData.map((holding, index) => (
+                  <tr key={index} className="hover:bg-white hover:bg-opacity-10 transition-colors duration-200">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
+                      {holding.symbol}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white opacity-90">
+                      {holding.name}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white opacity-90">
+                      {holding.shares.toLocaleString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white opacity-90">
+                      ${holding.avgPrice.toFixed(2)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white opacity-90">
+                      ${holding.currentPrice.toFixed(2)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
+                      ${holding.marketValue.toLocaleString()}
+                    </td>
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${
+                      holding.pnl >= 0 ? 'text-emerald-400' : 'text-red-400'
+                    }`}>
+                      ${holding.pnl.toLocaleString()}
+                    </td>
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${
+                      holding.pnlPercent >= 0 ? 'text-emerald-400' : 'text-red-400'
+                    }`}>
+                      {holding.pnlPercent >= 0 ? '+' : ''}{holding.pnlPercent.toFixed(2)}%
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-          
-          {accountsLoading ? (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-              <p className="mt-2 text-dark-600">Loading holdings...</p>
-            </div>
-          ) : accounts.length === 0 ? (
-            <div className="text-center py-8">
-              <CreditCard className="h-12 w-12 text-dark-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-dark-900 mb-2">No Holdings Available</h3>
-              <p className="text-dark-600 mb-4">Connect your bank accounts to see portfolio holdings</p>
-              <button
-                onClick={() => setShowBankConnection(true)}
-                className="btn-primary"
-              >
-                Connect Bank Accounts
-              </button>
-            </div>
-          ) : (
-            <>
-              <DataTable
-                columns={portfolioColumns}
-                data={holdingsData}
-                searchable={true}
-                filterable={true}
-                pagination={true}
-                itemsPerPage={10}
-              />
-              <div className="mt-4 text-xs text-dark-500">
-                <p>Holdings represent your connected bank accounts with simulated growth for demonstration purposes</p>
-              </div>
-            </>
-          )}
         </div>
       </div>
     </div>
   )
 }
-

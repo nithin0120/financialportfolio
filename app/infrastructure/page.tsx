@@ -133,15 +133,15 @@ export default function InfrastructurePage() {
   }, [currentTime])
 
   return (
-    <div className="min-h-screen bg-dark-50 py-8">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div className="pt-16 min-h-screen">
+      <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-dark-900">Infrastructure Monitoring</h1>
-          <p className="mt-2 text-dark-600">
+          <h1 className="text-3xl font-bold text-white drop-shadow-lg">Infrastructure Monitoring</h1>
+          <p className="mt-2 text-white opacity-90 drop-shadow-md">
             System health and performance monitoring
           </p>
-          <p className="mt-1 text-sm text-dark-500">
+          <p className="mt-1 text-sm text-white opacity-70">
             Last updated: {currentTime.toLocaleTimeString()}
           </p>
         </div>
